@@ -1,0 +1,27 @@
+## --- .NET 成果物の除外 ---
+[Bb]in/
+[Oo]bj/
+
+## --- Visual Studio / VS Code 固有の設定 ---
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## --- EF Core / DB 関連 ---
+# SQLite を使用している場合、実際の DB ファイルは除外（Migrationは含める）
+*.db
+*.db-shm
+*.db-wal
+
+## --- 公開設定・機密情報 ---
+# 開発用環境設定ファイル
+appsettings.Development.json
+
+## --- OS固有ファイル ---
+.DS_Store
+Thumbs.db
+
+.env
