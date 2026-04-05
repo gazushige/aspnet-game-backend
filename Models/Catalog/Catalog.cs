@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// カタログアイテムのカテゴリ。大分類。アイテム以外にも存在する。例：キャラクター、武器、敵、ガチャなど
     /// </summary>
-    public class CatalogCategory
+    public class CatalogCategory : IEntity
     {
         public int Id { get; set; }
         public string Code { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ namespace MyApi.Models
     /// <summary>
     /// カタログアイテムのprefixを管理するためのもの。より細分化されたカテゴリ
     /// </summary> 
-    public class CatalogSeries
+    public class CatalogSeries : IEntity
     {
         public int Id { get; set; }
         public int CategoryId { get; set; }
@@ -34,8 +34,9 @@ namespace MyApi.Models
     /// <summary>
     /// カタログアイテムのID。UUIDで管理。シリーズIDと通し番号も保持する。例：キャラクターシリーズの001番目のアイテム、武器シリーズの002番目のアイテムなど。アイテムの内容はCatalogItemBaseを継承した具体的なクラスで管理する。
     /// </summary>
-    public class Catalog
+    public class Catalog : IEntity
     {
+        public int Id { get; set; }
         public Guid Uuid { get; set; }
         public int SeriesId { get; set; }
         public CatalogSeries Series { get; set; } = null!;
@@ -48,7 +49,7 @@ namespace MyApi.Models
     /// <summary>
     /// カタログアイテムの基本クラス。シリーズごとにアイテムの内容は異なるが、共通の属性をここで定義する。シリーズごとに個別のテーブルを作る場合は、これを継承して具体的なアイテムクラスを作成する。
     /// </summary>
-    public abstract class CatalogItemBase : IHasTimestamps
+    public abstract class CatalogItemBase : IHasTimestamps, IEntity
     {
         public int Id { get; set; }
         public Guid CatalogUuid { get; set; } // CatalogId.Uuid への外部キー
@@ -179,5 +180,9 @@ namespace MyApi.Models
         LEGENDARY,
         MYTHIC,  //通常の最上位レア。ガチャで出すのはここまで。
         THE_ONE //唯一無二の特殊レア。例：イベント優勝者への限定報酬など
+    }
+    public interface IEntity
+    {
+        int Id { get; }
     }
 }

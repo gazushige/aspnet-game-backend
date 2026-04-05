@@ -8,7 +8,7 @@ namespace MyApi.Models
     /// 経験値テーブル（マスターデータ）
     /// 例: "普通タイプ", "早熟タイプ", "晩成タイプ" など
     /// </summary>
-    public class ExpTable
+    public class ExpTable : IEntity
     {
         public int Id { get; set; }
 

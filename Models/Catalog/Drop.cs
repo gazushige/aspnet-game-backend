@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// ドロップテーブル本体（PlayFabのRandomResultTableに相当）
     /// </summary>
-    public class DropTable
+    public class DropTable : IEntity
     {
         public int Id { get; set; }
         public string KeyCode { get; set; } = string.Empty; // PlayFab側のTableId
@@ -15,14 +15,15 @@ namespace MyApi.Models
         public bool IsActive { get; set; } = true;
 
         // 多対多のナビゲーション
-        public ICollection<DropTableItem> DropItems { get; set; } = new List<DropTableItem>();
+        public ICollection<DropItem> DropItems { get; set; } = new List<DropItem>();
     }
 
     /// <summary>
     /// 中間クラス（Throughクラス）: ドロップテーブルとアイテムの紐付け
     /// </summary>
-    public class DropTableItem
+    public class DropItem : IEntity
     {
+        public int Id { get; set; }
         public int DropTableId { get; set; }
         public DropTable DropTable { get; set; } = null!;
 
@@ -47,11 +48,11 @@ namespace MyApi.Models
         }
     }
 
-    public class DropTableItemConfiguration : IEntityTypeConfiguration<DropTableItem>
+    public class DropItemConfiguration : IEntityTypeConfiguration<DropItem>
     {
-        public void Configure(EntityTypeBuilder<DropTableItem> builder)
+        public void Configure(EntityTypeBuilder<DropItem> builder)
         {
-            builder.ToTable("drop_table_items");
+            builder.ToTable("drop_items");
 
             // 1. 複合主キーの設定 (Many-to-Manyの基本)
             // これにより、同じテーブルに同じアイテムが重複登録されるのを防ぐ

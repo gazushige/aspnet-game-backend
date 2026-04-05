@@ -2,11 +2,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MyApi.Models
 {
-    // データベース接続クラス（Djangoのsettings.py + Managerに相当）
-    public partial class ApiDbContext : DbContext
+    public class ApiDbContext(DbContextOptions<ApiDbContext> options) : BaseDbContext(options)
     {
-        public ApiDbContext(DbContextOptions<ApiDbContext> options) : base(options) { }
-
+    }
+    public class StaffDbContext(DbContextOptions<StaffDbContext> options) : BaseDbContext(options)
+    {
+    }
+    // データベース接続クラス（Djangoのsettings.py + Managerに相当）
+    public abstract partial class BaseDbContext(DbContextOptions options) : DbContext(options)
+    {
         // 各エンティティの登録
         public DbSet<CatalogCategory> Categories => Set<CatalogCategory>();
         public DbSet<CatalogSeries> Series => Set<CatalogSeries>();
@@ -17,8 +21,11 @@ namespace MyApi.Models
         public DbSet<ExpTable> ExpTables => Set<ExpTable>();
         public DbSet<Enemy> Enemies => Set<Enemy>();
         public DbSet<DropTable> DropTables => Set<DropTable>();
-        public DbSet<DropTableItem> DropTableItems => Set<DropTableItem>();
+        public DbSet<DropItem> DropTableItems => Set<DropItem>();
         public DbSet<VirtualCurrency> VirtualCurrencies => Set<VirtualCurrency>();
+        public DbSet<Lottery> Lotteries => Set<Lottery>();
+        public DbSet<LotteryRarity> LotteryRarities => Set<LotteryRarity>();
+        public DbSet<LotteryPrize> LotteryPrizes => Set<LotteryPrize>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,7 +33,7 @@ namespace MyApi.Models
             base.OnModelCreating(modelBuilder);
 
             // この一行で、プロジェクト内のすべての IEntityTypeConfiguration を自動適用
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApiDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseDbContext).Assembly);
         }
     }
 }
