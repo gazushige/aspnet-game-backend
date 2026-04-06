@@ -14,12 +14,12 @@ namespace MyApi.Models
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
 
         public int MaxStack { get; set; } = 99;
-        public JsonDocument? CustomData { get; set; }
+        public string? CustomData { get; set; }
 
         public bool IsConsumableByTime { get; set; }
         public bool IsConsumableByCount { get; set; } = true;
     }
-    public class ConsumableItemConfiguration : SellableCatalogItemConfiguration<ConsumableItem>
+    public class ConsumableItemConfiguration : SellableCatalogItemConfiguration<ConsumableItem>, IEntityTypeConfiguration<ConsumableItem>
     {
         public override void Configure(EntityTypeBuilder<ConsumableItem> builder)
         {

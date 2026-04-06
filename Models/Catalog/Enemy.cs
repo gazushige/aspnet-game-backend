@@ -11,7 +11,7 @@ namespace MyApi.Models
     {
         // 敵固有のパラメータ（HP, ATKなど）を JSONB で保持
         // 頻繁に検索対象になる項目（Levelなど）があれば、プロパティとして切り出すのが吉
-        public JsonDocument? CustomData { get; set; }
+        public string? CustomData { get; set; }
 
         // ドロップテーブルへの外部キー
         public int DropTableId { get; set; }

@@ -26,14 +26,35 @@ namespace MyApi.Models
         public DbSet<Lottery> Lotteries => Set<Lottery>();
         public DbSet<LotteryRarity> LotteryRarities => Set<LotteryRarity>();
         public DbSet<LotteryPrize> LotteryPrizes => Set<LotteryPrize>();
+        public DbSet<AssetVersion> AssetVersions => Set<AssetVersion>();
+        public DbSet<AppVersion> AppVersions => Set<AppVersion>();
+        public DbSet<CatalogVersion> CatalogVersions => Set<CatalogVersion>();
+        public DbSet<AddressableAsset> AddressableAssets => Set<AddressableAsset>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // この一行で、プロジェクト内のすべての IEntityTypeConfiguration を自動適用
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseDbContext).Assembly);
+            var assembly = typeof(BaseDbContext).Assembly;
+
+            // 抽象・ジェネリッククラスを除外して適用
+            var configTypes = assembly.GetTypes()
+                .Where(t =>
+                    !t.IsAbstract &&
+                    !t.IsInterface &&
+                    !t.IsGenericTypeDefinition && // ← これが重要
+                    t.GetInterfaces().Any(i =>
+                        i.IsGenericType &&
+                        i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)
+                    )
+                );
+
+            foreach (var type in configTypes)
+            {
+                dynamic config = Activator.CreateInstance(type)!;
+                modelBuilder.ApplyConfiguration(config);
+            }
         }
     }
 }

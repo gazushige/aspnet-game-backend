@@ -18,7 +18,7 @@ namespace MyApi.Models
 
         // 成長ロジック（例: 各レベルごとの必要累計EXPリストや係数）
         // PlayFabへ送る際やサーバー計算時に使用
-        public JsonDocument? Logic { get; set; }
+        public string? Logic { get; set; }
 
         // 逆参照ナビゲーション
         public ICollection<Player> Players { get; set; } = new List<Player>();
@@ -34,7 +34,7 @@ namespace MyApi.Models
         // 経験値テーブルへの外部キー
         public int ExpTableId { get; set; }
         public ExpTable ExpTable { get; set; } = null!;
-        public JsonDocument? CustomData { get; set; }
+        public string? CustomData { get; set; }
 
         // Django の __str__ 相当（デバッグやログ用）
         public override string ToString() => DisplayName;

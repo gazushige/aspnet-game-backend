@@ -59,7 +59,7 @@ namespace MyApi.Models
         public string DisplayName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsCurrentVersion { get; set; }
-        public JsonDocument? Tags { get; set; }
+        public string? Tags { get; set; }
         public string? ItemImageUrl { get; set; }
         public ItemStatus Status { get; set; } = ItemStatus.DRAFT;
 
@@ -102,7 +102,7 @@ namespace MyApi.Models
         }
     }
 
-    public abstract class CatalogItemBaseConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
+    public abstract class CatalogItemBaseConfiguration<TEntity>
     where TEntity : CatalogItemBase
     {
         public virtual void Configure(EntityTypeBuilder<TEntity> builder)

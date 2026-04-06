@@ -11,11 +11,11 @@ namespace MyApi.Models
     {
         // PlayFabの VirtualCurrencyPrices に相当
         // 例: {"GC": 100, "RM": 10} 
-        public JsonDocument? VirtualCurrencyPrices { get; set; }
+        public string? VirtualCurrencyPrices { get; set; }
 
         // PlayFabの RealCurrencyPrices に相当
         // 例: {"USD": 990, "JPY": 1200}
-        public JsonDocument? RealCurrencyPrices { get; set; }
+        public string? RealCurrencyPrices { get; set; }
 
         public bool IsStackable { get; set; }
         public bool IsTradable { get; set; }
@@ -24,7 +24,7 @@ namespace MyApi.Models
         public int InitialLimitedEditionCount { get; set; }
     }
     public abstract class SellableCatalogItemConfiguration<TEntity> : CatalogItemBaseConfiguration<TEntity>
-        where TEntity : SellableCatalogItem
+    where TEntity : SellableCatalogItem
     {
         public override void Configure(EntityTypeBuilder<TEntity> builder)
         {

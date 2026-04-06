@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using MyApi.Models.MyApi.Models;
 
 namespace MyApi.Models
 {
@@ -10,7 +8,7 @@ namespace MyApi.Models
         public string PlayfabCatalogVersion { get; set; } = string.Empty;
 
         // JSONField 相当（System.Text.Json.JsonDocument を使用）
-        public JsonDocument? SnapShot { get; set; }
+        public string? SnapShot { get; set; }
     }
 
     public class AssetVersion : VersionBase
@@ -60,7 +58,7 @@ namespace MyApi.Models
         public string SemVer => $"{Major}.{Minor}.{Patch}";
     }
 
-    public abstract class VersionBaseConfiguration<T> : IEntityTypeConfiguration<T> where T : VersionBase
+    public abstract class VersionBaseConfiguration<T> where T : VersionBase
     {
         public virtual void Configure(EntityTypeBuilder<T> builder)
         {
@@ -77,19 +75,18 @@ namespace MyApi.Models
         }
     }
 
-    public class CatalogVersionConfiguration : VersionBaseConfiguration<CatalogVersion>
+    public class CatalogVersionConfiguration : VersionBaseConfiguration<CatalogVersion>, IEntityTypeConfiguration<CatalogVersion>
     {
         public override void Configure(EntityTypeBuilder<CatalogVersion> builder)
         {
             base.Configure(builder);
             builder.ToTable("catalog_versions");
 
-            builder.HasOne(e => e.PlayfabCatalogVersion)
-                   .WithMany()
-                   .HasForeignKey(e => e.PlayfabCatalogVersion)
-                   .OnDelete(DeleteBehavior.Restrict); // PROTECT
+            // ✅ stringプロパティはPropertyで制約を定義する
+            builder.Property(e => e.PlayfabCatalogVersion)
+                   .IsRequired()
+                   .HasMaxLength(100);
 
-            // unique_together 相当
             builder.HasIndex(e => new { e.PlayfabCatalogVersion, e.Major, e.Minor, e.Patch })
                    .IsUnique()
                    .HasDatabaseName("UQ_CatalogVersion_SemVer");
@@ -98,7 +95,7 @@ namespace MyApi.Models
         }
     }
 
-    public class AppVersionConfiguration : VersionBaseConfiguration<AppVersion>
+    public class AppVersionConfiguration : VersionBaseConfiguration<AppVersion>, IEntityTypeConfiguration<AppVersion>
     {
         public override void Configure(EntityTypeBuilder<AppVersion> builder)
         {
@@ -109,29 +106,98 @@ namespace MyApi.Models
             builder.Property(e => e.StoreUrl).HasMaxLength(500);
         }
     }
-    namespace MyApi.Models
+    public class AssetVersionConfiguration : VersionBaseConfiguration<AssetVersion>, IEntityTypeConfiguration<AssetVersion>
     {
-        /// <summary>
-        /// Unity Addressables のアセット情報を表す
-        /// </summary>
-        public class AddressableAsset
+        public override void Configure(EntityTypeBuilder<AssetVersion> builder)
         {
-            public int Id { get; set; }
+            base.Configure(builder);
+            builder.ToTable("asset_versions");
 
-            public string Name { get; set; } = string.Empty;
-            public string? Label { get; set; }
-            public string Path { get; set; } = string.Empty;
-            public string? PublicUrl { get; set; }
+            // Many-to-Many の中間テーブルは EF Core が自動生成するが、必要に応じて Fluent API で細かく制御可能
+            builder.HasMany(av => av.Assets)
+                   .WithMany(a => a.Versions)
+                   .UsingEntity<Dictionary<string, object>>(
+                        "AssetVersionAssets", // 中間テーブル名
+                        j => j.HasOne<AddressableAsset>().WithMany().HasForeignKey("AddressableAssetId").OnDelete(DeleteBehavior.Cascade),
+                        j => j.HasOne<AssetVersion>().WithMany().HasForeignKey("AssetVersionId").OnDelete(DeleteBehavior.Cascade),
+                        j =>
+                        {
+                            j.HasKey("AssetVersionId", "AddressableAssetId");
+                            j.ToTable("asset_version_assets");
+                        }
+                   );
+        }
+    }
+    /// <summary>
+    /// Unity Addressables のアセット情報を表す
+    /// </summary>
+    public class AddressableAsset : IHasTimestamps, IEntity
+    {
+        public int Id { get; set; }
 
-            public DateTime CreatedAt { get; set; }
-            public DateTime UpdatedAt { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Label { get; set; }
+        public string Path { get; set; } = string.Empty;
+        public string? PublicUrl { get; set; }
 
-            // AssetVersion との多対多リレーションシップ
-            // Django の assets.ManyToManyField 相当
-            public ICollection<AssetVersion> Versions { get; set; } = new List<AssetVersion>();
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
-            // Django の __str__ 相当（ただしここでは Version への参照が必要）
-            public override string ToString() => $"{Name} ({Path})";
+        // AssetVersion との多対多リレーションシップ
+        // Django の assets.ManyToManyField 相当
+        public ICollection<AssetVersion> Versions { get; set; } = new List<AssetVersion>();
+
+        // Django の __str__ 相当（ただしここでは Version への参照が必要）
+        public override string ToString() => $"{Name} ({Path})";
+    }
+    public class AddressableAssetConfiguration : IEntityTypeConfiguration<AddressableAsset>
+    {
+        public void Configure(EntityTypeBuilder<AddressableAsset> builder)
+        {
+            // 1. テーブル名
+            builder.ToTable("addressable_assets");
+
+            // 2. 主キー
+            builder.HasKey(e => e.Id);
+
+            // 3. プロパティ制約
+            builder.Property(e => e.Name)
+                   .IsRequired()
+                   .HasMaxLength(200);
+
+            builder.Property(e => e.Label)
+                   .HasMaxLength(100);
+
+            // Addressablesのアセットパス (例: "Assets/Prefabs/Characters/Hero.prefab")
+            builder.Property(e => e.Path)
+                   .IsRequired()
+                   .HasMaxLength(500);
+
+            // S3などのCDN配信URL
+            builder.Property(e => e.PublicUrl)
+                   .HasMaxLength(2048); // URLの標準的な最大長
+
+            // 4. タイムスタンプ
+            builder.Property(e => e.CreatedAt)
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .ValueGeneratedOnAdd();
+
+            builder.Property(e => e.UpdatedAt)
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                   .ValueGeneratedOnAddOrUpdate();
+
+            // 5. インデックス
+            // Pathはアセットの一意識別子として使われるため一意制約
+            builder.HasIndex(e => e.Path)
+                   .IsUnique()
+                   .HasDatabaseName("UQ_AddressableAsset_Path");
+
+            // Labelは検索頻度が高いためインデックスを追加
+            builder.HasIndex(e => e.Label)
+                   .HasDatabaseName("IX_AddressableAsset_Label");
+
+            // 6. Many-to-Many (AssetVersionとの関係はAssetVersionConfiguration側で定義済み)
         }
     }
 }
+

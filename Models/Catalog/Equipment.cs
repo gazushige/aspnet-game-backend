@@ -16,10 +16,10 @@ namespace MyApi.Models
 
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
 
-        public JsonDocument? CustomData { get; set; }
+        public string? CustomData { get; set; }
 
     }
-    public class EquipmentItemConfiguration : SellableCatalogItemConfiguration<EquipmentItem>
+    public class EquipmentItemConfiguration : SellableCatalogItemConfiguration<EquipmentItem>, IEntityTypeConfiguration<EquipmentItem>
     {
         public override void Configure(EntityTypeBuilder<EquipmentItem> builder)
         {
