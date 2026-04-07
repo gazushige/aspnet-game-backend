@@ -14,6 +14,7 @@ namespace MyApi.Controllers
     [Route("staff/[controller]")]
     [EnableRateLimiting("StaffLimit")]
     [SkipPlayFabAuth] // PlayFab認証をスキップ
+    [SkipServerStatus] // サーバーステータスチェックをスキップ
     public abstract class CrudController<T>(StaffDbContext db) : ControllerBase where T : class, IEntity
     {
         protected readonly StaffDbContext _db = db;
@@ -25,6 +26,7 @@ namespace MyApi.Controllers
         {
             pageSize = Math.Min(pageSize, 200); // 上限を設ける
             var items = await _db.Set<T>()
+                .OrderBy(c => c.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

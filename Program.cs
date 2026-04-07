@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Yarp.ReverseProxy.Forwarder;
 using System.Net;
@@ -6,9 +7,9 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Templates;
 using System.Threading.RateLimiting;
-
 using MyApi.Models;
-using Microsoft.Extensions.Options;
+using rest.Components;
+
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,17 +29,11 @@ Log.Logger = new LoggerConfiguration()
     ))
     .CreateLogger();
 
-// 環境変数のバインドと検証を追加
-builder.Services.AddOptions<DotEnvSettings>()
-    .BindConfiguration("DotEnv")  // appsettings.jsonの"DotEnv"セクション
-    .ValidateDataAnnotations()
-    .ValidateOnStart(); // 起動時に検証、設定漏れを即座に検出
-
 // .env や設定ファイルから値を取得
 int authLimit = builder.Configuration.GetValue("RateLimit_AuthLimit", 5);
 int gameLimit = builder.Configuration.GetValue("RateLimit_GameLimit", 60);
 int staffLimit = builder.Configuration.GetValue("RateLimit_StaffLimit", 10);
-int cacheTtlMinutes = builder.Configuration.GetValue<int>("Cache_TtlMinutes", 5); // 例: 5
+int cacheTtlMinutes = builder.Configuration.GetValue("Cache_TtlMinutes", 5); // 例: 5
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -114,33 +109,25 @@ builder.Services.AddTransient<ServerStatusMiddleware>();
 
 builder.Services.AddHostedService<TokenCleanupBackgroundService>(); // トークンクリーンアップのバックグラウンドサービスを追加
 
+// --- サービスの登録 ---
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/admin/login";
+        options.Cookie.Name = "Admin_Auth";
+    });
+builder.Services.AddCascadingAuthenticationState(); // 認証状態をコンポーネントに伝播
+builder.Services.AddHttpContextAccessor();
+
+//------------------------------------------------------------------------
 var app = builder.Build();
 
-//例外処理のミドルウェアを追加（全体をキャッチしてログに残す）
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage(); // 開発用：詳細なエラー表示
-}
-else
-{
-    app.UseExceptionHandler("/error"); // 本番用：カスタムエラーページや共通処理へ
-    app.UseHsts();  // 本番用：HSTSを有効化
-}
-
-//単に落とさないだけでなく、「なぜ落ちたか」を構造化ログ（Serilog）で残す
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (Exception ex)
-    {
-        // ここでSerilogを使って、スタックトレースをJSONで出力
-        Log.Error(ex, "Unhandled exception during request: {Path}", context.Request.Path);
-        throw; // ExceptionHandlerミドルウェアに流す
-    }
-});
+// 1. エラーハンドリング（最優先）
+if (app.Environment.IsDevelopment()) { app.UseDeveloperExceptionPage(); }
+else { app.UseExceptionHandler("/error"); app.UseHsts(); }
 
 // Serilog のリクエストロギングをカスタマイズして、Cloud RunのトレースIDを含める
 app.UseSerilogRequestLogging(options =>
@@ -156,19 +143,37 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
-app.UseRouting(); // ルーティングミドルウェアを追加
+app.UseStaticFiles(); // ★ここに移動！認証や制限の前に静的ファイルを返す
 
-app.UseRateLimiter(); // レートリミットミドルウェアを追加
+// 3. ルーティング確定
+app.UseRouting();
 
-app.UseAuthentication();    // 認証ミドルウェア（必要に応じて追加）
+// 4. グローバルな制限
+app.UseRateLimiter();
 
-app.UseAuthorization();     // 認可ミドルウェア（必要に応じて追加）
+// 5. サーバー状態チェック（503を返すなら認証の前が良い）
+// これにより、メンテナンス中は認証ロジックを走らせずに済む
+app.UseMiddleware<ServerStatusMiddleware>();
 
-app.UseMiddleware<ServerStatusMiddleware>(); // サーバーステータス管理ミドルウェアを追加
+// 6. 認証・認可（IdentityやCookieの解決）
+app.UseAuthentication();
+app.UseAntiforgery(); // ★認証と認可の間に置くのが公式の推奨
+app.UseAuthorization();
 
-app.UseMiddleware<StaffApiKeyMiddleware>(); // スタッフAPIキー認証ミドルウェアを追加
+// 7. カスタム認証（APIキーや外部サービス連携）
+// これらは Authorization の後、または中で特定のパスに対して走るように調整
+app.UseMiddleware<StaffApiKeyMiddleware>();
+app.UseMiddleware<PlayFabAuthMiddleware>();
 
-app.UseMiddleware<PlayFabAuthMiddleware>(); // PlayFab認証ミドルウェアを追加
+// 8. 終端（エンドポイント）
+app.MapRazorComponents<App>()
+    .RequireRateLimiting("GameLimit") // ゲームアクション系のレートリミットを適用
+    .AddInteractiveServerRenderMode()
+    .WithMetadata(new SkipPlayFabAuthAttribute()) // PlayFab認証をスキップ
+    .WithMetadata(new SkipStaffAuthAttribute()) // スタッフAPIキー認証をスキップ
+    .WithMetadata(new SkipServerStatusAttribute()); // サーバーステータスチェックをスキップ
+
+app.MapControllers();
 
 // PlayFab 用の HttpClient (接続をプールして再利用)
 var httpClient = new HttpMessageInvoker(new SocketsHttpHandler
@@ -192,9 +197,9 @@ app.MapGet("/health", () => "{\"status\":\"ok\"}").WithName("HealthCheck")
 // 全ての /playfab/{*any} へのリクエストを PlayFab に転送
 var transformer = new PlayFabForwardingTransformer();
 
-app.Map("/playfab/{**catch-all}", async (HttpContext context, IHttpForwarder forwarder, IOptions<DotEnvSettings> settings) =>
+app.Map("/playfab/{**catch-all}", async (HttpContext context, IHttpForwarder forwarder, IConfiguration config) =>
 {
-    var error = await forwarder.SendAsync(context, settings.Value.BaseUrl, httpClient, requestConfig, transformer);
+    var error = await forwarder.SendAsync(context, $"https://{config["TitleId"]}.playfabapi.com", httpClient, requestConfig, transformer);
 
     if (error != ForwarderError.None)
     {
@@ -261,16 +266,10 @@ public sealed class PlayFabForwardingTransformer : HttpTransformer
         return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 }
-// グローバルクラス（環境変数の読み込みと保持）
-public sealed class DotEnvSettings
-{
-    public string TitleId { get; init; } = string.Empty;
-    public string SecretKey { get; init; } = string.Empty;
-    public string BaseUrl => $"https://{TitleId}.playfabapi.com";
-    public string ApiKey { get; init; } = string.Empty;
-}
+
 public enum ServerStatus
 {
+    Starting,
     Running,
     Stopped,
     Maintenance

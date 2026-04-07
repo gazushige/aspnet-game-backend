@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 public class PlayFabAuthService
 {
     private readonly HttpClient _httpClient;
-    private IOptions<DotEnvSettings> settings;
+    private readonly string _titleId;
     private readonly string _secretKey;
 
     private string? _serverEntityToken;
@@ -14,11 +14,11 @@ public class PlayFabAuthService
     // 前回の話にあった ConcurrentDictionary
     private readonly ConcurrentDictionary<string, DateTime> _validatedTokens = new();
 
-    public PlayFabAuthService(IOptions<DotEnvSettings> _settings, HttpClient httpClient)
+    public PlayFabAuthService(HttpClient httpClient, IConfiguration config)
     {
-        settings = _settings;
         _httpClient = httpClient;
-        _secretKey = _settings.Value.SecretKey;
+        _secretKey = config["SecretKey"] ?? throw new ArgumentNullException("SecretKey is not configured");
+        _titleId = config["TitleId"] ?? throw new ArgumentNullException("TitleId is not configured");
     }
 
     // サーバー自身のトークンを確認・更新
@@ -34,7 +34,7 @@ public class PlayFabAuthService
             if (!string.IsNullOrEmpty(_serverEntityToken) && DateTime.UtcNow.AddMinutes(1) < _tokenExpiration)
                 return;
 
-            var url = $"{settings.Value.BaseUrl}/Authentication/GetEntityToken";
+            var url = $"{_titleId}.playfabs.com/Authentication/GetEntityToken";
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("X-SecretKey", _secretKey);
 
@@ -63,7 +63,7 @@ public class PlayFabAuthService
         // 2. PlayFabで検証
         await EnsureServerTokenAsync();
 
-        var url = $"{settings.Value.BaseUrl}/Authentication/ValidateEntityToken";
+        var url = $"{_titleId}.playfabs.com/Authentication/ValidateEntityToken";
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("X-EntityToken", _serverEntityToken);
         request.Content = JsonContent.Create(new ValidateRequest(clientToken), PlayFabJsonContext.Default.ValidateRequest);

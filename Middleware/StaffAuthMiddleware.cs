@@ -1,7 +1,13 @@
 using Microsoft.Extensions.Options;
+using Serilog;
 
-public class StaffApiKeyMiddleware(IOptions<DotEnvSettings> option) : IMiddleware
+public class StaffApiKeyMiddleware : IMiddleware
 {
+    private readonly IConfiguration config;
+    public StaffApiKeyMiddleware(IConfiguration _config)
+    {
+        config = _config;
+    }
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         if (HasSkipAttribute(context))
@@ -11,10 +17,11 @@ public class StaffApiKeyMiddleware(IOptions<DotEnvSettings> option) : IMiddlewar
         }
 
         var apiKey = context.Request.Headers["X-Staff-Api-Key"].ToString();
-        var validKey = option.Value.ApiKey;
+        var validKey = config["Api_Key"] ?? throw new ArgumentNullException("Api_Key is not configured");
 
         if (string.IsNullOrEmpty(apiKey) || apiKey != validKey)
         {
+            Log.Warning("Unauthorized staff access attempt api_key:{ApiKeyId}", apiKey);
             context.Response.StatusCode = 403;
             await context.Response.WriteAsJsonAsync(new { error = "Staff access denied" });
             return;

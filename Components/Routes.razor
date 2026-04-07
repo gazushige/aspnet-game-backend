@@ -1,0 +1,20 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(rest.Components.Layout.MainLayout)">
+            <NotAuthorized>
+                @* ここは後で作成するログインリダイレクト *@
+                <p>認証が必要です。</p>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(rest.Components.Layout.MainLayout)">
+            <p role="alert">ページが見つかりません。</p>
+        </LayoutView>
+    </NotFound>
+</Router>

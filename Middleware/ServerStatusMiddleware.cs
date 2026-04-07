@@ -15,9 +15,10 @@ public class ServerStatusMiddleware : IMiddleware
 
         var label = status switch
         {
-            ServerStatus.Maintenance => "maintenance",
+            ServerStatus.Maintenance => "down_for_maintenance",
             ServerStatus.Stopped => "stopped",
-            _ => "unavailable",
+            ServerStatus.Starting => "starting",
+            _ => "temporarily_unavailable",
         };
 
         await context.Response.WriteAsJsonAsync(new { status = label, timestamp = DateTime.UtcNow });
