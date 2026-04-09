@@ -65,8 +65,9 @@ namespace MyApi.Models
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(e => e.Catalog)
-                   .WithMany() // Catalog側からどのDropTableに使われているか追う必要がなければ空でOK
-                   .HasForeignKey(e => e.CatalogUuid)
+                   .WithMany()
+                   .HasForeignKey(e => e.CatalogUuid) // DropItem側のカラム
+                   .HasPrincipalKey(c => c.Uuid)    // ★ここを追加！Catalog側のどのカラムを指すか指定
                    .OnDelete(DeleteBehavior.Restrict);
 
             // 3. Enum設定

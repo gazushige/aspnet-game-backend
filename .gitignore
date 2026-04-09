@@ -19,11 +19,10 @@
 ## --- 公開設定・機密情報 ---
 # 開発用環境設定ファイル
 appsettings.Development.json
-appsettings.json
+
 
 ## --- OS固有ファイル ---
 .DS_Store
 Thumbs.db
-
 .env
 appsettings.json

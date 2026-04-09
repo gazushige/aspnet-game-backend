@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace MyApi.Models
 {
@@ -40,7 +39,6 @@ namespace MyApi.Models
         public Guid Uuid { get; set; }
         public int SeriesId { get; set; }
         public CatalogSeries Series { get; set; } = null!;
-
         public int Number { get; set; }
         public string KeyCode { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
@@ -67,11 +65,6 @@ namespace MyApi.Models
         public DateTime UpdatedAt { get; set; }
     }
 }
-interface IHasTimestamps
-{
-    DateTime CreatedAt { get; set; }
-    DateTime UpdatedAt { get; set; }
-}
 
 namespace MyApi.Models
 {
@@ -79,6 +72,9 @@ namespace MyApi.Models
     {
         public void Configure(EntityTypeBuilder<CatalogSeries> builder)
         {
+            builder.ToTable("catalog_series");
+            builder.HasKey(e => e.Id);
+
             // ここに制約をすべて書く
             builder.HasIndex(e => e.Prefix).IsUnique();
 
@@ -98,6 +94,9 @@ namespace MyApi.Models
         public void Configure(EntityTypeBuilder<CatalogCategory> builder)
         {
             // ここに制約をすべて書く
+            builder.ToTable("catalog_categories");
+            builder.HasKey(e => e.Id);
+
             builder.HasIndex(e => e.Code).IsUnique();
         }
     }
@@ -107,6 +106,8 @@ namespace MyApi.Models
     {
         public virtual void Configure(EntityTypeBuilder<TEntity> builder)
         {
+            builder.HasKey(e => e.Id);
+
             // 1. インデックス設定 (監査・検索の高速化)
             builder.HasIndex(e => e.CatalogUuid);
             builder.HasIndex(e => e.IsCurrentVersion);
@@ -154,9 +155,13 @@ namespace MyApi.Models
     {
         public void Configure(EntityTypeBuilder<Catalog> builder)
         {
-            builder.HasKey(e => e.Uuid);
+            builder.ToTable("catalogs");
+            builder.HasKey(e => e.Id);
             builder.HasIndex(e => new { e.SeriesId, e.Number }).IsUnique();
             builder.HasIndex(e => e.KeyCode).IsUnique();
+            builder.HasIndex(e => e.Uuid)
+                           .IsUnique() // 重複をDBレベルで防ぐ
+                           .HasDatabaseName("UQ_Catalog_Uuid"); // 名前を付けておくと管理しやすい
 
             builder.HasOne(e => e.Series)
                    .WithMany()
@@ -184,5 +189,27 @@ namespace MyApi.Models
     public interface IEntity
     {
         int Id { get; }
+    }
+    /// <summary>
+    /// タイムスタンプを持つエンティティのインターフェース。CreatedAtとUpdatedAtを定義する。これを実装することで、アイテムの作成日時と更新日時を管理できる。
+    /// </summary> 
+    interface IHasTimestamps
+    {
+        DateTime CreatedAt { get; set; }
+        DateTime UpdatedAt { get; set; }
+    }
+    /// <summary>
+    /// 有効期限を持つエンティティのインターフェース。StartAtとExpiredAtを定義する。これを実装することで、アイテムの有効期間を管理できる。
+    interface IHasExpiry
+    {
+        DateTime? StartAt { get; set; }
+        DateTime? ExpiredAt { get; set; }
+    }
+    /// <summary>
+    /// 効果を持つエンティティのインターフェース。CustomDataを定義する。これを実装することで、アイテムの効果やパラメータを柔軟に管理できる。
+    /// </summary>
+    interface IHasEffect
+    {
+        string? CustomData { get; set; }
     }
 }

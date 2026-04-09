@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// 敵キャラクターを表す（マスターデータ）
     /// </summary>
-    public class Enemy : CatalogItemBase
+    public class Enemy : CatalogItemBase, IHasEffect
     {
         // 敵固有のパラメータ（HP, ATKなど）を JSONB で保持
         // 頻繁に検索対象になる項目（Levelなど）があれば、プロパティとして切り出すのが吉

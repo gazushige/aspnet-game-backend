@@ -27,7 +27,7 @@ namespace MyApi.Models
     /// <summary>
     /// ガチャ景品としてのプレイヤーキャラクター
     /// </summary>
-    public class Player : CatalogItemBase // CharacterCatalogItem の代わり
+    public class Player : CatalogItemBase, IHasEffect// CharacterCatalogItem の代わり
     {
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
 

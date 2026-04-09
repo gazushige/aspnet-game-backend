@@ -6,14 +6,21 @@ namespace MyApi.Models
     /// <summary>
     /// ガチャ本体
     /// </summary>
-    public class Lottery : CatalogItemBase
+    public class Lottery : CatalogItemBase, IHasExpiry
     {
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime? StartAt { get; set; }
+        public DateTime? ExpiredAt { get; set; }
         public int PityNumber { get; set; } = 0; // 天井回数
         public PityType PityType { get; set; } = PityType.NONE;
-        public VirtualCurrency SingleCost { get; set; } = new VirtualCurrency();
-        public VirtualCurrency TenCost { get; set; } = new VirtualCurrency();
+        // 単発ガチャのコスト
+        public int SingleCostCurrencyId { get; set; } // どの通貨か（ID）
+        public VirtualCurrency SingleCostCurrency { get; set; } = null!;
+        public int SingleCostAmount { get; set; }     // いくら消費するか
+
+        // 10連ガチャのコスト
+        public int TenCostCurrencyId { get; set; }
+        public VirtualCurrency TenCostCurrency { get; set; } = null!;
+        public int TenCostAmount { get; set; }
 
         // ナビゲーションプロパティ
         public ICollection<LotteryRarity> Rarities { get; set; } = new List<LotteryRarity>();
@@ -23,9 +30,8 @@ namespace MyApi.Models
     /// <summary>
     /// レアリティごとの重み設定（例：SSR 3%, SR 17%, R 80% など）
     /// </summary>
-    public class LotteryRarity : IEntity
+    public class LotteryRarity : CatalogItemBase
     {
-        public int Id { get; set; }
         public int LotteryId { get; set; }
         public Lottery Lottery { get; set; } = null!;
 
@@ -36,16 +42,13 @@ namespace MyApi.Models
     /// <summary>
     /// 具体的な景品とその重み
     /// </summary>
-    public class LotteryPrize : IEntity
+    public class LotteryPrize : CatalogItemBase
     {
-        public int Id { get; set; }
+
         public int LotteryId { get; set; }
         public Lottery Lottery { get; set; } = null!;
-
-        // 景品となるアイテム（CatalogItemBaseを継承したものの共通ID）
-        public Guid CatalogUuid { get; set; }
-        public Catalog Catalog { get; set; } = null!;
-
+        public int PrizeCatalogId { get; set; }
+        public Catalog PrizeCatalog { get; set; } = null!;
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
         public int Weight { get; set; } = 1;
         public bool IsPickup { get; set; } = false;
@@ -59,34 +62,51 @@ namespace MyApi.Models
             base.Configure(builder);
             builder.ToTable("lotteries");
 
-            builder.Property(e => e.PityNumber).HasDefaultValue(0);
+            // 単発コストのリレーション (1つの通貨を多くのガチャが参照)
+            builder.HasOne(e => e.SingleCostCurrency)
+                   .WithMany()
+                   .HasForeignKey(e => e.SingleCostCurrencyId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-            // 以前定義したカタログユニーク制約などをここでも適用
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision }).IsUnique();
+            // 10連コストのリレーション
+            builder.HasOne(e => e.TenCostCurrency)
+                   .WithMany()
+                   .HasForeignKey(e => e.TenCostCurrencyId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            // 消費量の設定
+            builder.Property(e => e.SingleCostAmount).HasDefaultValue(0);
+            builder.Property(e => e.TenCostAmount).HasDefaultValue(0);
         }
     }
 
-    // --- LotteryRarity Configuration ---
-    public class LotteryRarityConfiguration : IEntityTypeConfiguration<LotteryRarity>
+    // --- LotteryRarity (継承モデル) ---
+    public class LotteryRarityConfiguration : CatalogItemBaseConfiguration<LotteryRarity>
     {
-        public void Configure(EntityTypeBuilder<LotteryRarity> builder)
+        public override void Configure(EntityTypeBuilder<LotteryRarity> builder)
         {
+            base.Configure(builder);
             builder.ToTable("lottery_rarities");
 
             builder.HasOne(e => e.Lottery)
                    .WithMany(l => l.Rarities)
                    .HasForeignKey(e => e.LotteryId)
-                   .OnDelete(DeleteBehavior.Cascade); // ガチャが消えたらレアリティ設定も消す
+                   .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Property(e => e.Rarity).HasConversion<string>().HasMaxLength(20);
+            builder.Property(e => e.Rarity)
+                   .HasConversion<string>()
+                   .HasMaxLength(20);
+
+            builder.Property(e => e.Weight).HasDefaultValue(1);
         }
     }
 
-    // --- LotteryPrize Configuration ---
-    public class LotteryPrizeConfiguration : IEntityTypeConfiguration<LotteryPrize>
+    // --- LotteryPrize (継承モデル) ---
+    public class LotteryPrizeConfiguration : CatalogItemBaseConfiguration<LotteryPrize>
     {
-        public void Configure(EntityTypeBuilder<LotteryPrize> builder)
+        public override void Configure(EntityTypeBuilder<LotteryPrize> builder)
         {
+            base.Configure(builder);
             builder.ToTable("lottery_prizes");
 
             // ガチャ本体とのリレーション
@@ -95,18 +115,24 @@ namespace MyApi.Models
                    .HasForeignKey(e => e.LotteryId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            // アイテム本体とのリレーション (Django: PROTECT)
-            builder.HasOne(e => e.Catalog)
+            // 景品（Catalog本体）とのリレーション
+            builder.HasOne(e => e.PrizeCatalog)
                    .WithMany()
-                   .HasForeignKey(e => e.CatalogUuid)
-                   .OnDelete(DeleteBehavior.Restrict); // 景品に設定されているアイテムの削除を禁止
+                   .HasForeignKey(e => e.PrizeCatalogId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Property(e => e.Rarity).HasConversion<string>().HasMaxLength(20);
+            builder.Property(e => e.Rarity)
+                   .HasConversion<string>()
+                   .HasMaxLength(20);
 
-            // パフォーマンスのためのインデックス
-            builder.HasIndex(e => new { e.LotteryId, e.Rarity });
+            builder.Property(e => e.Weight).HasDefaultValue(1);
+
+            // 検索効率化のための複合インデックス
+            builder.HasIndex(e => new { e.LotteryId, e.Rarity })
+                   .HasDatabaseName("IX_LotteryPrize_Lottery_Rarity");
         }
     }
+
     public enum PityType
     {
         NONE,

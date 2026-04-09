@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApi.Models;
 
@@ -10,9 +11,11 @@ using MyApi.Models;
 namespace rest.Migrations
 {
     [DbContext(typeof(StaffDbContext))]
-    partial class StaffDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260409071629_RebuildInitial")]
+    partial class RebuildInitial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.14");
@@ -1036,65 +1039,6 @@ namespace rest.Migrations
                     b.ToTable("LotteryRarities");
                 });
 
-            modelBuilder.Entity("MyApi.Models.Material", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsStackable")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsTradable")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("MaxQuantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MinQuantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Revision")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CatalogId");
-
-                    b.ToTable("Materials");
-                });
-
             modelBuilder.Entity("MyApi.Models.Player", b =>
                 {
                     b.Property<int>("Id")
@@ -1583,17 +1527,6 @@ namespace rest.Migrations
                     b.Navigation("Catalog");
 
                     b.Navigation("Lottery");
-                });
-
-            modelBuilder.Entity("MyApi.Models.Material", b =>
-                {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
-                        .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Catalog");
                 });
 
             modelBuilder.Entity("MyApi.Models.Player", b =>

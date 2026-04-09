@@ -23,6 +23,7 @@ namespace MyApi.Models
         public DbSet<DropTable> DropTables => Set<DropTable>();
         public DbSet<DropItem> DropTableItems => Set<DropItem>();
         public DbSet<VirtualCurrency> VirtualCurrencies => Set<VirtualCurrency>();
+        public DbSet<Material> Materials => Set<Material>();
         public DbSet<Lottery> Lotteries => Set<Lottery>();
         public DbSet<LotteryRarity> LotteryRarities => Set<LotteryRarity>();
         public DbSet<LotteryPrize> LotteryPrizes => Set<LotteryPrize>();
@@ -30,7 +31,10 @@ namespace MyApi.Models
         public DbSet<AppVersion> AppVersions => Set<AppVersion>();
         public DbSet<CatalogVersion> CatalogVersions => Set<CatalogVersion>();
         public DbSet<AddressableAsset> AddressableAssets => Set<AddressableAsset>();
-
+        public DbSet<SkillTree> SkillTrees => Set<SkillTree>();
+        public DbSet<SkillNode> SkillNodes => Set<SkillNode>();
+        public DbSet<Skill> Skills => Set<Skill>();
+        public DbSet<Title> Titles => Set<Title>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

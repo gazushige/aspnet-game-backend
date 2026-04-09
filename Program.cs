@@ -122,6 +122,13 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddCascadingAuthenticationState(); // 認証状態をコンポーネントに伝播
 builder.Services.AddHttpContextAccessor();
 
+// キャッシュと初期化サービスの登録
+builder.Services.AddSingleton<MasterDataCache>();
+builder.Services.AddHostedService<MasterDataSeedService>();
+
+
+
+
 //------------------------------------------------------------------------
 var app = builder.Build();
 
@@ -193,6 +200,13 @@ app.MapGet("/health", () => "{\"status\":\"ok\"}").WithName("HealthCheck")
     .WithMetadata(new SkipServerStatusAttribute())
     .WithMetadata(new SkipPlayFabAuthAttribute())
     .WithMetadata(new SkipStaffAuthAttribute());
+
+app.MapGet("/status", () => $"{{\"status\":\"{ServerStatusManager.CurrentServerStatus()}\"}}\n")
+    .DisableRateLimiting()
+    .WithMetadata(new SkipServerStatusAttribute())
+    .WithMetadata(new SkipPlayFabAuthAttribute())
+    .WithMetadata(new SkipStaffAuthAttribute());
+
 
 // 全ての /playfab/{*any} へのリクエストを PlayFab に転送
 var transformer = new PlayFabForwardingTransformer();
@@ -276,7 +290,7 @@ public enum ServerStatus
 }
 static class ServerStatusManager
 {
-    static volatile ServerStatus serverStatus = ServerStatus.Running; // 例: サーバーステータスを保持する変数
+    static volatile ServerStatus serverStatus = ServerStatus.Starting; // 例: サーバーステータスを保持する変数
     static public ServerStatus CurrentServerStatus()
     {
         return serverStatus;

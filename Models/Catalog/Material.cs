@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace MyApi.Models
 {
     /// <summary>
-    /// 仮想通貨（石、コインなど）の定義マスター
+    /// 素材（石、鉄鋼、木材など）の定義マスター
     /// </summary>
-    public class VirtualCurrency : CatalogItemBase
+    public class Material : CatalogItemBase
     {
         public int MinQuantity { get; set; } = 1;
 
@@ -15,18 +15,17 @@ namespace MyApi.Models
 
         public bool IsStackable { get; set; } = true;
         public bool IsTradable { get; set; } = false;
-        public CurrencyType CurrencyType { get; set; } = CurrencyType.FREE;
 
         public override string ToString() => DisplayName;
     }
-    public class VirtualCurrencyConfiguration : CatalogItemBaseConfiguration<VirtualCurrency>
+    public class MaterialConfiguration : CatalogItemBaseConfiguration<Material>
     {
-        public override void Configure(EntityTypeBuilder<VirtualCurrency> builder)
+        public override void Configure(EntityTypeBuilder<Material> builder)
         {
             // 基底クラス（CatalogUuid, Revision, IsCurrentVersion等）の設定を適用
             base.Configure(builder);
 
-            builder.ToTable("virtual_currencies");
+            builder.ToTable("materials");
 
             // デフォルト値の設定
             builder.Property(e => e.MinQuantity).HasDefaultValue(1);
@@ -54,9 +53,5 @@ namespace MyApi.Models
             ));
         }
     }
-    public enum CurrencyType
-    {
-        PAID,       //課金通貨
-        FREE,       //無料通貨
-    }
+
 }

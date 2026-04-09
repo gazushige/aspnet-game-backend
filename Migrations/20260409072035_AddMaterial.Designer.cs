@@ -11,8 +11,8 @@ using MyApi.Models;
 namespace rest.Migrations
 {
     [DbContext(typeof(StaffDbContext))]
-    [Migration("20260406031749_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260409072035_AddMaterial")]
+    partial class AddMaterial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,6 +33,36 @@ namespace rest.Migrations
                     b.HasIndex("AddressableAssetId");
 
                     b.ToTable("asset_version_assets", (string)null);
+                });
+
+            modelBuilder.Entity("DagDagNode", b =>
+                {
+                    b.Property<int>("DagsId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RootNodesId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DagsId", "RootNodesId");
+
+                    b.HasIndex("RootNodesId");
+
+                    b.ToTable("DagDagNode");
+                });
+
+            modelBuilder.Entity("DagNodeDagNode", b =>
+                {
+                    b.Property<int>("ChildrenId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ParentsId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ChildrenId", "ParentsId");
+
+                    b.HasIndex("ParentsId");
+
+                    b.ToTable("DagNodeDagNode");
                 });
 
             modelBuilder.Entity("MyApi.Models.AddressableAsset", b =>
@@ -181,11 +211,8 @@ namespace rest.Migrations
 
             modelBuilder.Entity("MyApi.Models.Catalog", b =>
                 {
-                    b.Property<Guid>("Uuid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsLocked")
@@ -201,15 +228,22 @@ namespace rest.Migrations
                     b.Property<int>("SeriesId")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Uuid");
+                    b.Property<Guid>("Uuid")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("KeyCode")
                         .IsUnique();
 
+                    b.HasIndex("Uuid")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_Catalog_Uuid");
+
                     b.HasIndex("SeriesId", "Number")
                         .IsUnique();
 
-                    b.ToTable("Catalogs");
+                    b.ToTable("catalogs", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.CatalogCategory", b =>
@@ -237,7 +271,7 @@ namespace rest.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Categories");
+                    b.ToTable("catalog_categories", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.CatalogSeries", b =>
@@ -269,7 +303,7 @@ namespace rest.Migrations
                         .IsUnique()
                         .HasDatabaseName("UQ_CatalogSeries_Category_Prefix");
 
-                    b.ToTable("Series");
+                    b.ToTable("catalog_series", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.CatalogVersion", b =>
@@ -329,6 +363,9 @@ namespace rest.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CatalogUuid")
@@ -428,6 +465,8 @@ namespace rest.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CatalogId");
+
                     b.HasIndex("CatalogUuid")
                         .IsUnique()
                         .HasDatabaseName("UQ_Consumable_CurrentVersion")
@@ -442,6 +481,115 @@ namespace rest.Migrations
                         .HasDatabaseName("UQ_Consumable_Catalog_Revision");
 
                     b.ToTable("consumable_items", (string)null);
+                });
+
+            modelBuilder.Entity("MyApi.Models.Dag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DagType")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Dags", (string)null);
+
+                    b.HasDiscriminator<string>("DagType").HasValue("Dag");
+
+                    b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagEdge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ChildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DagId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ParentId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChildId");
+
+                    b.HasIndex("DagId");
+
+                    b.HasIndex("ParentId", "ChildId", "DagId")
+                        .IsUnique();
+
+                    b.ToTable("DagEdges", (string)null);
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagMembership", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DagId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("NodeId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NodeId");
+
+                    b.HasIndex("DagId", "NodeId")
+                        .IsUnique();
+
+                    b.ToTable("DagMemberships", (string)null);
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagNode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DagId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NodeType")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DagId");
+
+                    b.ToTable("DagNodes", (string)null);
+
+                    b.HasDiscriminator<string>("NodeType").HasValue("DagNode");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("MyApi.Models.DropItem", b =>
@@ -515,6 +663,9 @@ namespace rest.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("CatalogUuid")
                         .HasColumnType("TEXT");
 
@@ -554,7 +705,7 @@ namespace rest.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CatalogUuid");
+                    b.HasIndex("CatalogId");
 
                     b.HasIndex("DropTableId");
 
@@ -565,6 +716,9 @@ namespace rest.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CatalogUuid")
@@ -644,6 +798,8 @@ namespace rest.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CatalogId");
+
                     b.HasIndex("CatalogUuid")
                         .IsUnique()
                         .HasDatabaseName("UQ_Equipment_CurrentVersion")
@@ -690,6 +846,9 @@ namespace rest.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("CatalogUuid")
                         .HasColumnType("TEXT");
 
@@ -703,7 +862,7 @@ namespace rest.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("EndDate")
+                    b.Property<DateTime?>("ExpiredAt")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsCurrentVersion")
@@ -721,10 +880,13 @@ namespace rest.Migrations
                     b.Property<int>("Revision")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("SingleCostId")
+                    b.Property<int>("SingleCostAmount")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("StartDate")
+                    b.Property<int>("SingleCostCurrencyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("StartAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
@@ -733,7 +895,10 @@ namespace rest.Migrations
                     b.Property<string>("Tags")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TenCostId")
+                    b.Property<int>("TenCostAmount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TenCostCurrencyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -741,11 +906,11 @@ namespace rest.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CatalogUuid");
+                    b.HasIndex("CatalogId");
 
-                    b.HasIndex("SingleCostId");
+                    b.HasIndex("SingleCostCurrencyId");
 
-                    b.HasIndex("TenCostId");
+                    b.HasIndex("TenCostCurrencyId");
 
                     b.ToTable("Lotteries");
                 });
@@ -756,69 +921,13 @@ namespace rest.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsPickup")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LotteryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Rarity")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Weight")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CatalogUuid");
-
-                    b.HasIndex("LotteryId", "Rarity");
-
-                    b.ToTable("lottery_prizes", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("LotteryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Rarity")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Weight")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LotteryId");
-
-                    b.ToTable("lottery_rarities", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.Player", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("CatalogId")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CatalogUuid")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CustomData")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -828,14 +937,20 @@ namespace rest.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ExpTableId")
+                    b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsCurrentVersion")
+                    b.Property<bool>("IsPickup")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ItemImageUrl")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("LotteryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrizeCatalogId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Rarity")
                         .HasColumnType("INTEGER");
@@ -852,19 +967,85 @@ namespace rest.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Weight")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CatalogUuid");
+                    b.HasIndex("CatalogId");
 
-                    b.HasIndex("ExpTableId");
+                    b.HasIndex("LotteryId");
 
-                    b.ToTable("Players");
+                    b.HasIndex("PrizeCatalogId");
+
+                    b.ToTable("LotteryPrizes");
                 });
 
-            modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
+            modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CatalogUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCurrentVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LotteryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rarity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Weight")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogId");
+
+                    b.HasIndex("LotteryId");
+
+                    b.ToTable("LotteryRarities");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Material", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CatalogUuid")
@@ -912,9 +1093,245 @@ namespace rest.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CatalogUuid");
+                    b.HasIndex("CatalogId");
+
+                    b.ToTable("Materials");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Player", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CatalogUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ExpTableId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsCurrentVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rarity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogId");
+
+                    b.HasIndex("ExpTableId");
+
+                    b.ToTable("Players");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Skill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CustomData")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Skills", (string)null);
+                });
+
+            modelBuilder.Entity("MyApi.Models.Title", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CatalogUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IconUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCurrentVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("StartAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogId");
+
+                    b.ToTable("Titles");
+                });
+
+            modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CatalogId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("CatalogUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CurrencyType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsCurrentVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsStackable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsTradable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MaxQuantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MinQuantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogId");
 
                     b.ToTable("VirtualCurrencies");
+                });
+
+            modelBuilder.Entity("MyApi.Models.SkillTree", b =>
+                {
+                    b.HasBaseType("MyApi.Models.Dag");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.HasDiscriminator().HasValue("SkillTree");
+                });
+
+            modelBuilder.Entity("MyApi.Models.SkillNode", b =>
+                {
+                    b.HasBaseType("MyApi.Models.DagNode");
+
+                    b.Property<int>("Cost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasDiscriminator().HasValue("SkillNode");
                 });
 
             modelBuilder.Entity("AssetVersionAssets", b =>
@@ -928,6 +1345,36 @@ namespace rest.Migrations
                     b.HasOne("MyApi.Models.AssetVersion", null)
                         .WithMany()
                         .HasForeignKey("AssetVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DagDagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.Dag", null)
+                        .WithMany()
+                        .HasForeignKey("DagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("RootNodesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DagNodeDagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("ChildrenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("ParentsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -958,11 +1405,64 @@ namespace rest.Migrations
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Catalog");
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagEdge", b =>
+                {
+                    b.HasOne("MyApi.Models.DagNode", "Child")
+                        .WithMany("ParentEdges")
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.Dag", "Dag")
+                        .WithMany()
+                        .HasForeignKey("DagId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MyApi.Models.DagNode", "Parent")
+                        .WithMany("ChildEdges")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Child");
+
+                    b.Navigation("Dag");
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagMembership", b =>
+                {
+                    b.HasOne("MyApi.Models.Dag", "Dag")
+                        .WithMany("Memberships")
+                        .HasForeignKey("DagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.DagNode", "Node")
+                        .WithMany("Memberships")
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dag");
+
+                    b.Navigation("Node");
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.Dag", null)
+                        .WithMany("Nodes")
+                        .HasForeignKey("DagId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("MyApi.Models.DropItem", b =>
@@ -970,6 +1470,7 @@ namespace rest.Migrations
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
                         .HasForeignKey("CatalogUuid")
+                        .HasPrincipalKey("Uuid")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -988,7 +1489,7 @@ namespace rest.Migrations
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1007,7 +1508,7 @@ namespace rest.Migrations
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1018,35 +1519,35 @@ namespace rest.Migrations
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyApi.Models.VirtualCurrency", "SingleCost")
+                    b.HasOne("MyApi.Models.VirtualCurrency", "SingleCostCurrency")
                         .WithMany()
-                        .HasForeignKey("SingleCostId")
+                        .HasForeignKey("SingleCostCurrencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyApi.Models.VirtualCurrency", "TenCost")
+                    b.HasOne("MyApi.Models.VirtualCurrency", "TenCostCurrency")
                         .WithMany()
-                        .HasForeignKey("TenCostId")
+                        .HasForeignKey("TenCostCurrencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Catalog");
 
-                    b.Navigation("SingleCost");
+                    b.Navigation("SingleCostCurrency");
 
-                    b.Navigation("TenCost");
+                    b.Navigation("TenCostCurrency");
                 });
 
             modelBuilder.Entity("MyApi.Models.LotteryPrize", b =>
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("CatalogId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
@@ -1055,27 +1556,54 @@ namespace rest.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MyApi.Models.Catalog", "PrizeCatalog")
+                        .WithMany()
+                        .HasForeignKey("PrizeCatalogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Catalog");
 
                     b.Navigation("Lottery");
+
+                    b.Navigation("PrizeCatalog");
                 });
 
             modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
                 {
+                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                        .WithMany()
+                        .HasForeignKey("CatalogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
                         .WithMany("Rarities")
                         .HasForeignKey("LotteryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Catalog");
+
                     b.Navigation("Lottery");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Material", b =>
+                {
+                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                        .WithMany()
+                        .HasForeignKey("CatalogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Catalog");
                 });
 
             modelBuilder.Entity("MyApi.Models.Player", b =>
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1090,20 +1618,58 @@ namespace rest.Migrations
                     b.Navigation("ExpTable");
                 });
 
-            modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
+            modelBuilder.Entity("MyApi.Models.Title", b =>
                 {
                     b.HasOne("MyApi.Models.Catalog", "Catalog")
                         .WithMany()
-                        .HasForeignKey("CatalogUuid")
+                        .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Catalog");
                 });
 
+            modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
+                {
+                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                        .WithMany()
+                        .HasForeignKey("CatalogId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Catalog");
+                });
+
+            modelBuilder.Entity("MyApi.Models.SkillNode", b =>
+                {
+                    b.HasOne("MyApi.Models.Skill", "Skill")
+                        .WithMany("Nodes")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Skill");
+                });
+
             modelBuilder.Entity("MyApi.Models.CatalogCategory", b =>
                 {
                     b.Navigation("Series");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Dag", b =>
+                {
+                    b.Navigation("Memberships");
+
+                    b.Navigation("Nodes");
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagNode", b =>
+                {
+                    b.Navigation("ChildEdges");
+
+                    b.Navigation("Memberships");
+
+                    b.Navigation("ParentEdges");
                 });
 
             modelBuilder.Entity("MyApi.Models.DropTable", b =>
@@ -1121,6 +1687,11 @@ namespace rest.Migrations
                     b.Navigation("Prizes");
 
                     b.Navigation("Rarities");
+                });
+
+            modelBuilder.Entity("MyApi.Models.Skill", b =>
+                {
+                    b.Navigation("Nodes");
                 });
 #pragma warning restore 612, 618
         }
