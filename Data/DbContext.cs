@@ -31,33 +31,36 @@ namespace MyApi.Models
         public DbSet<AppVersion> AppVersions => Set<AppVersion>();
         public DbSet<CatalogVersion> CatalogVersions => Set<CatalogVersion>();
         public DbSet<AddressableAsset> AddressableAssets => Set<AddressableAsset>();
+        public DbSet<UpdateVersion> UpdateVersions => Set<UpdateVersion>();
         public DbSet<SkillTree> SkillTrees => Set<SkillTree>();
         public DbSet<SkillNode> SkillNodes => Set<SkillNode>();
         public DbSet<Skill> Skills => Set<Skill>();
         public DbSet<Title> Titles => Set<Title>();
-
+        public DbSet<DailyMission> DailyMission => Set<DailyMission>();
+        public DbSet<LoginBonus> LoginBonus => Set<LoginBonus>();
+        public DbSet<Achievement> Achievements => Set<Achievement>();
+        public DbSet<ShopItem> ShopItems => Set<ShopItem>();
+        public DbSet<ShopItem> ShopCategories => Set<ShopItem>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            var assembly = typeof(BaseDbContext).Assembly;
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseDbContext).Assembly);
 
-            // 抽象・ジェネリッククラスを除外して適用
-            var configTypes = assembly.GetTypes()
-                .Where(t =>
-                    !t.IsAbstract &&
-                    !t.IsInterface &&
-                    !t.IsGenericTypeDefinition && // ← これが重要
-                    t.GetInterfaces().Any(i =>
-                        i.IsGenericType &&
-                        i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)
-                    )
-                );
+            var dataProperty = modelBuilder.Entity<EligibilityCondition>().Property(e => e.Data);
 
-            foreach (var type in configTypes)
+            if (Database.IsNpgsql()) // PostgreSQLの場合
             {
-                dynamic config = Activator.CreateInstance(type)!;
-                modelBuilder.ApplyConfiguration(config);
+                dataProperty
+                    .HasColumnType("jsonb")
+                    .HasDefaultValueSql("'{}'::jsonb");
+            }
+            else // SQLiteなどの場合
+            {
+                // SQLiteはJSONを単なる文字列(TEXT)として扱う
+                dataProperty
+                    .HasColumnType("TEXT")
+                    .HasDefaultValueSql("'{}'"); // キャスト(::jsonb)を消す
             }
         }
     }

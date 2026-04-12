@@ -3,12 +3,14 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Frozen;
 using MyApi.Models;
-public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataCache cache) : IHostedService
+public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataCache cache,
+    IServerStatusService statusService) // DIで受け取る
+    : IHostedService
 {
     // SeedService - StartAsync内をこれだけにできる
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        ServerStatusManager.ChangeServerStatus(ServerStatus.Starting);
+        statusService.ChangeStatus(ServerStatus.Starting);
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
 
@@ -25,7 +27,7 @@ public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataC
                 .Invoke(this, [context])!;
         }
 
-        ServerStatusManager.ChangeServerStatus(ServerStatus.Running);
+        statusService.ChangeStatus(ServerStatus.Running);
     }
 
     private async Task LoadAsync<T>(ApiDbContext context) where T : class, IEntity

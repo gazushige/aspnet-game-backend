@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApi.Models;
 
@@ -10,9 +11,11 @@ using MyApi.Models;
 namespace rest.Migrations
 {
     [DbContext(typeof(StaffDbContext))]
-    partial class StaffDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410130445_AddShop")]
+    partial class AddShop
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.14");
@@ -30,6 +33,36 @@ namespace rest.Migrations
                     b.HasIndex("AddressableAssetId");
 
                     b.ToTable("asset_version_assets", (string)null);
+                });
+
+            modelBuilder.Entity("DagDagNode", b =>
+                {
+                    b.Property<int>("DagsId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RootNodesId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DagsId", "RootNodesId");
+
+                    b.HasIndex("RootNodesId");
+
+                    b.ToTable("DagDagNode");
+                });
+
+            modelBuilder.Entity("DagNodeDagNode", b =>
+                {
+                    b.Property<int>("ChildrenId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ParentsId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ChildrenId", "ParentsId");
+
+                    b.HasIndex("ParentsId");
+
+                    b.ToTable("DagNodeDagNode");
                 });
 
             modelBuilder.Entity("MyApi.Models.AchievementTier", b =>
@@ -595,12 +628,17 @@ namespace rest.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DagId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("NodeType")
                         .IsRequired()
                         .HasMaxLength(13)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DagId");
 
                     b.ToTable("DagNodes", (string)null);
 
@@ -683,8 +721,8 @@ namespace rest.Migrations
                     b.Property<string>("Data")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("'{}'");
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1549,6 +1587,36 @@ namespace rest.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DagDagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.Dag", null)
+                        .WithMany()
+                        .HasForeignKey("DagsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("RootNodesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DagNodeDagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("ChildrenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MyApi.Models.DagNode", null)
+                        .WithMany()
+                        .HasForeignKey("ParentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MyApi.Models.AchievementTier", b =>
                 {
                     b.HasOne("MyApi.Models.Achievement", null)
@@ -1654,6 +1722,14 @@ namespace rest.Migrations
                     b.Navigation("Dag");
 
                     b.Navigation("Node");
+                });
+
+            modelBuilder.Entity("MyApi.Models.DagNode", b =>
+                {
+                    b.HasOne("MyApi.Models.Dag", null)
+                        .WithMany("Nodes")
+                        .HasForeignKey("DagId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("MyApi.Models.DropItem", b =>
@@ -1909,6 +1985,8 @@ namespace rest.Migrations
             modelBuilder.Entity("MyApi.Models.Dag", b =>
                 {
                     b.Navigation("Memberships");
+
+                    b.Navigation("Nodes");
                 });
 
             modelBuilder.Entity("MyApi.Models.DagNode", b =>

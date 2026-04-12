@@ -8,8 +8,8 @@ namespace MyApi.Models
     /// </summary>
     public class Lottery : CatalogItemBase, IHasExpiry
     {
-        public DateTime? StartAt { get; set; }
-        public DateTime? ExpiredAt { get; set; }
+        public DateTimeOffset? StartAt { get; set; }
+        public DateTimeOffset? ExpiredAt { get; set; }
         public int PityNumber { get; set; } = 0; // 天井回数
         public PityType PityType { get; set; } = PityType.NONE;
         // 単発ガチャのコスト

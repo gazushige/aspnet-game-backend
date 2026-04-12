@@ -12,8 +12,8 @@ namespace MyApi.Models
     {
         public string Name { get; set; } = string.Empty;
         public string? IconUrl { get; set; }
-        public DateTime? StartAt { get; set; }
-        public DateTime? ExpiredAt { get; set; }
+        public DateTimeOffset? StartAt { get; set; }
+        public DateTimeOffset? ExpiredAt { get; set; }
         public string? CustomData { get; set; }
     }
     public class TitleConfiguration : CatalogItemBaseConfiguration<Title>

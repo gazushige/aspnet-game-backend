@@ -23,12 +23,13 @@ namespace MyApi.Configurations
             builder.Property(d => d.Description)
                 .HasMaxLength(500);
 
-            builder.HasMany(d => d.Nodes)
-           .WithOne() // DagNode側に「public Dag Dag {get;set;}」がない場合は引数なし
-           .HasForeignKey("DagId") // DagNodeテーブルに作られる外部キー名を指定
-           .OnDelete(DeleteBehavior.Cascade); // Dagを消したらNodeも消す設定
+            // ✅ 計算プロパティをEF Coreから無視させる
+            builder.Ignore(d => d.Nodes);
+            builder.Ignore(d => d.RootNodes);
 
-            // TPHの設定
+            // ✅ MembershipsへのリレーションはDagMembershipConfigurationに任せる
+            //    ここでの HasMany(d => d.Nodes) は削除
+
             builder.HasDiscriminator<string>("DagType")
                    .HasValue<SkillTree>("SkillTree");
         }
@@ -41,9 +42,16 @@ namespace MyApi.Configurations
             builder.ToTable("DagNodes");
             builder.HasKey(n => n.Id);
 
+            // ✅ 計算プロパティを無視
+            builder.Ignore(n => n.Parents);
+            builder.Ignore(n => n.Children);
+            builder.Ignore(n => n.IsRoot);
+            builder.Ignore(n => n.IsLeaf);
+            builder.Ignore(n => n.Depth);
+            builder.Ignore(n => n.Dags);
+
             builder.HasDiscriminator<string>("NodeType")
                 .HasValue<SkillNode>("SkillNode");
-            // 今後追加: .HasValue<BattleNode>("BattleNode") など
         }
     }
 

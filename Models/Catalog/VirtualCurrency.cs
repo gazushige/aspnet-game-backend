@@ -3,60 +3,65 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MyApi.Models
 {
-    /// <summary>
-    /// 仮想通貨（石、コインなど）の定義マスター
-    /// </summary>
-    public class VirtualCurrency : CatalogItemBase
+    public class VirtualCurrency : IEntity
     {
-        public int MinQuantity { get; set; } = 1;
+        public int Id { get; set; }
 
-        // PlayFabの制限やDBのint範囲を考慮した最大値
-        public int MaxQuantity { get; set; } = 2100000000;
+        // PlayFabの仮想通貨コード (例: "GD", "ST")
+        public string Code { get; set; } = string.Empty;
 
-        public bool IsStackable { get; set; } = true;
-        public bool IsTradable { get; set; } = false;
+        public string Name { get; set; } = string.Empty;
+
         public CurrencyType CurrencyType { get; set; } = CurrencyType.FREE;
 
-        public override string ToString() => DisplayName;
+        // --- スタミナ/時間回復設定 ---
+
+        /// <summary>
+        /// 時間回復するかどうか
+        /// </summary>
+        public bool IsRechargeable => CurrencyType == CurrencyType.Recharge;
+
+        /// <summary>
+        /// 24時間あたりの回復量（PlayFabの仕様に準拠）
+        /// 例: 5分に1回復なら 1440/5 = 288
+        /// </summary>
+        public int RechargeRate { get; set; } = 0;
+
+        /// <summary>
+        /// 自動回復で到達する最大値（スタミナ上限）
+        /// 課金等でこれを超えて所持することは可能（オーバーフロー）
+        /// </summary>
+        public int MaxCapacity { get; set; } = 0;
+
+        /// <summary>
+        /// 絶対的な最大所持制限（DB/システム上の上限）
+        /// </summary>
+        public int MaxQuantity { get; set; } = 2000000000;
     }
-    public class VirtualCurrencyConfiguration : CatalogItemBaseConfiguration<VirtualCurrency>
+
+    public class VirtualCurrencyConfiguration : IEntityTypeConfiguration<VirtualCurrency>
     {
-        public override void Configure(EntityTypeBuilder<VirtualCurrency> builder)
+        public void Configure(EntityTypeBuilder<VirtualCurrency> builder)
         {
-            // 基底クラス（CatalogUuid, Revision, IsCurrentVersion等）の設定を適用
-            base.Configure(builder);
-
             builder.ToTable("virtual_currencies");
+            builder.HasKey(e => e.Id);
 
-            // デフォルト値の設定
-            builder.Property(e => e.MinQuantity).HasDefaultValue(1);
-            builder.Property(e => e.MaxQuantity).HasDefaultValue(2100000000);
-            builder.Property(e => e.IsStackable).HasDefaultValue(true);
-            builder.Property(e => e.IsTradable).HasDefaultValue(false);
+            builder.HasIndex(e => e.Code).IsUnique();
 
-            // --- 制約 (Constraints) ---
+            // スタミナ関連のデフォルト
+            builder.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            builder.Property(e => e.Code).IsRequired().HasMaxLength(10);
+            builder.Property(e => e.RechargeRate).HasDefaultValue(0);
+            builder.Property(e => e.MaxCapacity).HasDefaultValue(0);
 
-            // 1. カタログUUID + リビジョンのユニーク制約
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision })
-                   .IsUnique()
-                   .HasDatabaseName("UQ_VC_Catalog_Revision");
-
-            // 2. 現在のバージョンはカタログごとに1つ（Partial Index）
-            builder.HasIndex(e => e.CatalogUuid)
-                   .IsUnique()
-                   .HasFilter("\"IsCurrentVersion\" = TRUE")
-                   .HasDatabaseName("UQ_VC_CurrentVersion");
-
-            // 3. 数値範囲のチェック制約 (DjangoのPositiveIntegerField相当 + α)
-            builder.ToTable(t => t.HasCheckConstraint(
-                "CK_VC_QuantityRange",
-                "\"MinQuantity\" >= 0 AND \"MinQuantity\" <= \"MaxQuantity\""
-            ));
+            builder.Property(e => e.MaxQuantity).HasDefaultValue(2000000000);
         }
     }
+
     public enum CurrencyType
     {
-        PAID,       //課金通貨
-        FREE,       //無料通貨
+        PAID = 1,   // 課金
+        FREE = 2,   // 無料
+        Recharge = 3 // リチャージ
     }
 }

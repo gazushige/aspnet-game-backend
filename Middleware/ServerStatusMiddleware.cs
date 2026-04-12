@@ -1,9 +1,14 @@
 public class ServerStatusMiddleware : IMiddleware
 {
+    private readonly IServerStatusService _serverStatusService;
+    // コンストラクタでシングルトンサービスを受け取る
+    public ServerStatusMiddleware(IServerStatusService serverStatusService)
+    {
+        _serverStatusService = serverStatusService;
+    }
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        var status = ServerStatusManager.CurrentServerStatus(); // 1回だけ取得
-
+        var status = _serverStatusService.CurrentStatus;
         if (status == ServerStatus.Running || HasSkipAttribute(context))
         {
             await next(context);

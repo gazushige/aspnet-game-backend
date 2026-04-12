@@ -6,19 +6,13 @@ namespace MyApi.Models
     /// <summary>
     /// 素材（石、鉄鋼、木材など）の定義マスター
     /// </summary>
-    public class Material : CatalogItemBase
+    public class Material : SellableCatalogItem
     {
-        public int MinQuantity { get; set; } = 1;
 
         // PlayFabの制限やDBのint範囲を考慮した最大値
         public int MaxQuantity { get; set; } = 2100000000;
-
-        public bool IsStackable { get; set; } = true;
-        public bool IsTradable { get; set; } = false;
-
-        public override string ToString() => DisplayName;
     }
-    public class MaterialConfiguration : CatalogItemBaseConfiguration<Material>
+    public class MaterialConfiguration : SellableCatalogItemConfiguration<Material>
     {
         public override void Configure(EntityTypeBuilder<Material> builder)
         {
@@ -28,7 +22,6 @@ namespace MyApi.Models
             builder.ToTable("materials");
 
             // デフォルト値の設定
-            builder.Property(e => e.MinQuantity).HasDefaultValue(1);
             builder.Property(e => e.MaxQuantity).HasDefaultValue(2100000000);
             builder.Property(e => e.IsStackable).HasDefaultValue(true);
             builder.Property(e => e.IsTradable).HasDefaultValue(false);

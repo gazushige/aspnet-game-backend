@@ -40,8 +40,9 @@ namespace MyApi.Models
         public int SeriesId { get; set; }
         public CatalogSeries Series { get; set; } = null!;
         public int Number { get; set; }
-        public string KeyCode { get; set; } = string.Empty;
+
         public bool IsLocked { get; set; }
+        public string Code => Series.Prefix + string.Format("{0:0>3}", Number);
     }
 
     /// <summary>
@@ -158,7 +159,6 @@ namespace MyApi.Models
             builder.ToTable("catalogs");
             builder.HasKey(e => e.Id);
             builder.HasIndex(e => new { e.SeriesId, e.Number }).IsUnique();
-            builder.HasIndex(e => e.KeyCode).IsUnique();
             builder.HasIndex(e => e.Uuid)
                            .IsUnique() // 重複をDBレベルで防ぐ
                            .HasDatabaseName("UQ_Catalog_Uuid"); // 名前を付けておくと管理しやすい
@@ -186,6 +186,10 @@ namespace MyApi.Models
         MYTHIC,  //通常の最上位レア。ガチャで出すのはここまで。
         THE_ONE //唯一無二の特殊レア。例：イベント優勝者への限定報酬など
     }
+
+    /// <summary>
+    /// EF CoreでDB管理するクラスに付ける。マイグレーションに含ませるのに必要
+    /// </summary> 
     public interface IEntity
     {
         int Id { get; }
@@ -200,10 +204,11 @@ namespace MyApi.Models
     }
     /// <summary>
     /// 有効期限を持つエンティティのインターフェース。StartAtとExpiredAtを定義する。これを実装することで、アイテムの有効期間を管理できる。
+    /// </summary>
     interface IHasExpiry
     {
-        DateTime? StartAt { get; set; }
-        DateTime? ExpiredAt { get; set; }
+        DateTimeOffset? StartAt { get; set; }
+        DateTimeOffset? ExpiredAt { get; set; }
     }
     /// <summary>
     /// 効果を持つエンティティのインターフェース。CustomDataを定義する。これを実装することで、アイテムの効果やパラメータを柔軟に管理できる。
