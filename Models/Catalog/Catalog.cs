@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MyApi.Models
 {
@@ -51,7 +52,7 @@ namespace MyApi.Models
     public abstract class CatalogItemBase : IHasTimestamps, IEntity
     {
         public int Id { get; set; }
-        public Guid CatalogUuid { get; set; } // CatalogId.Uuid への外部キー
+        public Guid CatalogUuid { get; set; } = Guid.CreateVersion7();// CatalogId.Uuid への外部キー
         public Catalog Catalog { get; set; } = null!;
 
         public int Revision { get; set; } = 1;
@@ -62,8 +63,8 @@ namespace MyApi.Models
         public string? ItemImageUrl { get; set; }
         public ItemStatus Status { get; set; } = ItemStatus.DRAFT;
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }
 
@@ -115,6 +116,9 @@ namespace MyApi.Models
             builder.HasIndex(e => e.Status);
 
             // 2. 文字列制約 (Fluent APIで上書き・明示)
+            builder.Property(e => e.CatalogUuid)
+                // Insert後はこの値を無視（または例外をスロー）するように設定
+                .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
             builder.Property(e => e.DisplayName)
                 .IsRequired()
                 .HasMaxLength(120);
@@ -199,8 +203,8 @@ namespace MyApi.Models
     /// </summary> 
     interface IHasTimestamps
     {
-        DateTime CreatedAt { get; set; }
-        DateTime UpdatedAt { get; set; }
+        DateTimeOffset CreatedAt { get; set; }
+        DateTimeOffset UpdatedAt { get; set; }
     }
     /// <summary>
     /// 有効期限を持つエンティティのインターフェース。StartAtとExpiredAtを定義する。これを実装することで、アイテムの有効期間を管理できる。

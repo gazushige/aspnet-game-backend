@@ -19,7 +19,7 @@ namespace MyApi.Models
         ushort Patch { get; }
         string SemVer { get; }
         VersionStatus Status { get; }
-        DateTime? ReleasedAt { get; }
+        DateTimeOffset? ReleasedAt { get; }
     }
 
     // -------------------------------------------------------
@@ -40,9 +40,9 @@ namespace MyApi.Models
         public ushort Patch { get; set; }
         public string? Description { get; set; }
         public VersionStatus Status { get; set; } = VersionStatus.Draft;
-        public DateTime? ReleasedAt { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTimeOffset? ReleasedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
 
         /// <summary>SemVer文字列（例: "1.2.3"）</summary>
         public string SemVer => $"{Major}.{Minor}.{Patch}";
@@ -228,7 +228,7 @@ namespace MyApi.Models
         public ushort Patch => App.Patch;
         public string SemVer => App.SemVer;
         public VersionStatus Status => App.Status;
-        public DateTime? ReleasedAt => App.ReleasedAt;
+        public DateTimeOffset? ReleasedAt => App.ReleasedAt;
 
         public AppPlatform Platform => App.Platform;
 
@@ -238,8 +238,8 @@ namespace MyApi.Models
         public int AssetVersionId { get; set; }
         public AssetVersion Asset { get; set; } = null!;
 
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 
     // -------------------------------------------------------

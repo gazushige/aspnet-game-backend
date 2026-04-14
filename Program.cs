@@ -10,12 +10,13 @@ using System.Threading.RateLimiting;
 using MyApi.Models;
 using rest.Components;
 using Google.Cloud.Firestore;
+using OpenTelemetry.Metrics;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
-string project_id = builder.Configuration.GetValue("RateLimit_AuthLimit", "your-project-id");
-var firestoreDb = FirestoreDb.Create("project_id");
+string project_id = builder.Configuration.GetValue("RateLimit_AuthLimit", "no-project-id");
+var firestoreDb = FirestoreDb.Create(project_id);
 
 
 // DIにも登録（MetricsCollectorServiceが使うため）
@@ -54,12 +55,12 @@ builder.Services.AddRateLimiter(options =>
     // ① IP単位のFixedWindow（メイン対策）
     // 認証系：厳しく（ブルートフォース対策）
     options.AddPolicy("AuthLimit", ctx =>
-        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(ctx), _ =>
+        RateLimitPartition.GetFixedWindowLimiter(HelperClass.GetClientIp(ctx), _ =>
             new FixedWindowRateLimiterOptions { PermitLimit = authLimit, Window = TimeSpan.FromMinutes(1) }));
 
     // ゲームアクション系：標準
     options.AddPolicy("GameLimit", ctx =>
-    RateLimitPartition.GetTokenBucketLimiter(GetClientIp(ctx), _ =>
+    RateLimitPartition.GetTokenBucketLimiter(HelperClass.GetClientIp(ctx), _ =>
         new TokenBucketRateLimiterOptions
         {
             // 1. バースト許容数（バケツの大きさ）
@@ -80,7 +81,7 @@ builder.Services.AddRateLimiter(options =>
 
     // 参照・ランキング系：緩め
     options.AddPolicy("StaffLimit", ctx =>
-        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(ctx), _ =>
+        RateLimitPartition.GetFixedWindowLimiter(HelperClass.GetClientIp(ctx), _ =>
             new FixedWindowRateLimiterOptions { PermitLimit = staffLimit, Window = TimeSpan.FromSeconds(1) }));
 
     // ② 429レスポンスのカスタマイズ
@@ -104,10 +105,14 @@ builder.Host.UseSerilog();
 // DB接続設定を追加 (SQLite)
 //本番はpostgresqlに切り替える予定
 builder.Services
+    .AddDbContext<AdminDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("AdminContext")))
     .AddDbContext<ApiDbContext>(options =>
-        options.UseSqlite("Data Source=data.db"))
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ApiContext")))
+    // options.UseSqlite("Data Source=data.db"))
     .AddDbContext<StaffDbContext>(options =>
-        options.UseSqlite("Data Source=data.db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("StaffContext")));
+// options.UseSqlite("Data Source=data.db"));
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(); // .NET 9 標準の OpenAPI 登録
@@ -141,13 +146,13 @@ builder.Services.AddSingleton<IServerStatusService, ServerStatusService>();
 builder.Services.AddSingleton<MasterDataCache>();
 builder.Services.AddHostedService<MasterDataSeedService>();
 
-// builder.Services.AddSingleton<MetricsAggregator>();
-// builder.Services.AddHostedService<MetricsCollectorService>();
-// // OTelはRuntime計測だけに絞る（HttpはMiddlewareで取るため）
-// builder.Services.AddOpenTelemetry()
-//     .WithMetrics(m => m.AddRuntimeInstrumentation());
+builder.Services.AddSingleton<MetricsAggregator>();
+builder.Services.AddHostedService<MetricsCollectorService>();
+// OTelはRuntime計測だけに絞る（HttpはMiddlewareで取るため）
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(m => m.AddRuntimeInstrumentation());
 
-//------------------------------------------------------------------------
+//----------------------------------ここからapp--------------------------------------
 var app = builder.Build();
 
 // 1. エラーハンドリング（最優先）
@@ -190,6 +195,7 @@ app.UseAuthorization();
 app.UseMiddleware<StaffApiKeyMiddleware>();
 app.UseMiddleware<PlayFabAuthMiddleware>();
 
+//-------------------------- ここからMap -------------------------------------
 // 8. 終端（エンドポイント）
 app.MapRazorComponents<App>()
     .RequireRateLimiting("GameLimit") // ゲームアクション系のレートリミットを適用
@@ -250,18 +256,21 @@ app.Run();
 
 //-------------------------------------------------------------------
 // IP取得ヘルパー（Cloud Run対応：X-Forwarded-Forを優先）
-static string GetClientIp(HttpContext ctx)
+public static class HelperClass
 {
-    // Cloud RunはGoogleのLBを経由するのでX-Forwarded-Forが信頼できる
-    var forwarded = ctx.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-    if (!string.IsNullOrEmpty(forwarded))
+    public static string GetClientIp(HttpContext ctx)
     {
-        // 複数IPが連なる場合は先頭（元クライアント）を使う
-        var firstIp = forwarded.Split(',')[0].Trim();
-        if (IPAddress.TryParse(firstIp, out _))
-            return firstIp;
+        // Cloud RunはGoogleのLBを経由するのでX-Forwarded-Forが信頼できる
+        var forwarded = ctx.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(forwarded))
+        {
+            // 複数IPが連なる場合は先頭（元クライアント）を使う
+            var firstIp = forwarded.Split(',')[0].Trim();
+            if (IPAddress.TryParse(firstIp, out _))
+                return firstIp;
+        }
+        return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
-    return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
 // PlayFab用カスタムTransformer
 public sealed class PlayFabForwardingTransformer : HttpTransformer
@@ -276,7 +285,7 @@ public sealed class PlayFabForwardingTransformer : HttpTransformer
         await base.TransformRequestAsync(httpContext, proxyRequest, destinationPrefix, cancellationToken);
 
         // クライアントの生IPを取得（GetClientIpと同じロジック）
-        var clientIp = GetClientIp(httpContext);
+        var clientIp = HelperClass.GetClientIp(httpContext);
 
         // X-Forwarded-Forを確実に上書き（ASP.NETが付加したものを排除）
         proxyRequest.Headers.Remove("X-Forwarded-For");
@@ -285,17 +294,5 @@ public sealed class PlayFabForwardingTransformer : HttpTransformer
         // PlayFabが参照する可能性のある別ヘッダーにも設定
         proxyRequest.Headers.Remove("X-Real-IP");
         proxyRequest.Headers.TryAddWithoutValidation("X-Real-IP", clientIp);
-    }
-
-    private static string GetClientIp(HttpContext ctx)
-    {
-        var forwarded = ctx.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwarded))
-        {
-            var firstIp = forwarded.Split(',')[0].Trim();
-            if (IPAddress.TryParse(firstIp, out _))
-                return firstIp;
-        }
-        return ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 }

@@ -1,8 +1,8 @@
 // Models/MetricsSnapshot.cs
 public class MetricsSnapshot
 {
-    public DateTime PeriodStart { get; set; }
-    public DateTime PeriodEnd { get; set; }
+    public DateTimeOffset PeriodStart { get; set; }
+    public DateTimeOffset PeriodEnd { get; set; }
     public string PeriodLabel { get; set; } = ""; // "1m", "1h", "1d"
 
     public HttpMetrics Http { get; set; } = new();

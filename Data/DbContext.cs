@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MyApi.Models
 {
+    public class AdminDbContext(DbContextOptions<AdminDbContext> options) : BaseDbContext(options)
+    {
+    }
     public class ApiDbContext(DbContextOptions<ApiDbContext> options) : BaseDbContext(options)
     {
     }
@@ -39,8 +42,8 @@ namespace MyApi.Models
         public DbSet<DailyMission> DailyMission => Set<DailyMission>();
         public DbSet<LoginBonus> LoginBonus => Set<LoginBonus>();
         public DbSet<Achievement> Achievements => Set<Achievement>();
+        public DbSet<Shop> Shops => Set<Shop>();
         public DbSet<ShopItem> ShopItems => Set<ShopItem>();
-        public DbSet<ShopItem> ShopCategories => Set<ShopItem>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

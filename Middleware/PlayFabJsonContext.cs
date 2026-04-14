@@ -1,7 +1,5 @@
 using System.Text.Json.Serialization;
 
-
-
 // 1. シリアライズ対象のデータ構造（record または class）
 public record EntityTokenResponse(EntityTokenData Data);
 public record EntityTokenData(string EntityToken, DateTime TokenExpiration);
