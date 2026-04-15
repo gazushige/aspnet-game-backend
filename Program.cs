@@ -11,6 +11,9 @@ using MyApi.Models;
 using rest.Components;
 using Google.Cloud.Firestore;
 using OpenTelemetry.Metrics;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -232,6 +235,32 @@ app.MapGet("/status", (IServerStatusService statusService) =>
     .WithMetadata(new SkipPlayFabAuthAttribute())
     .WithMetadata(new SkipStaffAuthAttribute());
 
+// Program.cs
+app.MapPost("/admin/login-handler", async (
+    HttpContext httpContext,
+    IConfiguration config,
+    [FromForm] string username,
+    [FromForm] string password,
+    [FromForm] string __RequestVerificationToken) =>
+{
+    var adminId = config["ADMIN_ID"];
+    var adminPass = config["ADMIN_PASSWORD"];
+
+    if (username == adminId && password == adminPass)
+    {
+        var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        return Results.Redirect("/admin");
+    }
+
+    return Results.Redirect("/admin/login?error=1");
+})
+.WithMetadata(new SkipServerStatusAttribute())
+.WithMetadata(new SkipPlayFabAuthAttribute())
+.WithMetadata(new SkipStaffAuthAttribute())
+.DisableAntiforgery(); // AntiForgeryはBlazor側で処理済みのため
 
 // 全ての /playfab/{*any} へのリクエストを PlayFab に転送
 var transformer = new PlayFabForwardingTransformer();

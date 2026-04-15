@@ -6,8 +6,7 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(rest.Components.Layout.MainLayout)">
             <NotAuthorized>
-                @* ここは後で作成するログインリダイレクト *@
-                <p>認証が必要です。</p>
+                <rest.Components.Pages.Admin.RedirectToLogin />
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

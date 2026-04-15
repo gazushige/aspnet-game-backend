@@ -1,31 +1,32 @@
 @page "/admin/login"
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Forms
+
 @inject NavigationManager Nav
-@inject IHttpContextAccessor HttpContextAccessor
-@inject IConfiguration Config
-@using Microsoft.AspNetCore.RateLimiting
-@attribute [EnableRateLimiting("AuthLimit")]
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-4">
             <div class="card shadow">
                 <div class="card-header bg-dark text-white">Admin Login</div>
                 <div class="card-body">
-                    @if (!string.IsNullOrEmpty(errorMessage))
+                    @if (showError)
                     {
-                        <div class="alert alert-danger">@errorMessage</div>
+                        <div class="alert alert-danger">Invalid credentials.</div>
                     }
-                    <div class="mb-3">
-                        <label>ID</label>
-                        <input type="text" class="form-control" @bind="username" />
-                    </div>
-                    <div class="mb-3">
-                        <label>Password</label>
-                        <input type="password" class="form-control" @bind="password" />
-                    </div>
-                    <button class="btn btn-primary w-100" @onclick="HandleLogin">Login</button>
+
+                    @* EditForm をやめて、通常の HTML form で action を指定 *@
+                    <form method="post" action="/admin/login-handler">
+                        <AntiforgeryToken />
+                        <div class="mb-3">
+                            <label class="form-label">ID</label>
+                            <input name="username" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input name="password" type="password" class="form-control" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -33,31 +34,5 @@
 </div>
 
 @code {
-    private string username = "";
-    private string password = "";
-    private string? errorMessage;
-
-    private async Task HandleLogin()
-    {
-        // .env や appsettings.json から値を取得
-        var adminId = Config["ADMIN_ID"];
-        var adminPass = Config["ADMIN_PASSWORD"];
-        // ここに固定のID/パスワードを設定（実際は環境変数等から取得を推奨）
-        if (username == adminId && password == adminPass)
-        {
-            var claims = new List<Claim> { new Claim(ClaimTypes.Name, "Admin") };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            // Note: Blazor ServerでのログインはHttpContextの直接操作が必要なため、
-            // 実際には Login 専用のコントローラーへ POST するか、
-            // HttpContextAccessor を経由してサインインします。
-            await HttpContextAccessor.HttpContext!.SignInAsync(principal);
-            Nav.NavigateTo("/admin", true);
-        }
-        else
-        {
-            errorMessage = "Invalid credentials.";
-        }
-    }
+    private bool showError => Nav.Uri.Contains("error=1");
 }

@@ -1,0 +1,61 @@
+@page "/admin"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize]
+
+<PageTitle>Admin Dashboard</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+        <h1>Admin Dashboard</h1>
+        <AuthorizeView>
+            <div class="text-muted">
+                Logged in as: <strong>@context.User.Identity?.Name</strong>
+            </div>
+        </AuthorizeView>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Content Management</h5>
+                    <p class="card-text">Manage your site content and resources.</p>
+                    <a href="/admin/content" class="btn btn-outline-primary">Manage</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Settings</h5>
+                    <p class="card-text">System-wide configuration and security.</p>
+                    <a href="/admin/settings" class="btn btn-outline-secondary">Configure</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 pt-4 border-top">
+        @* ログアウト処理は通常、コントローラーや専用のエンドポイントへのPOSTが必要です *@
+        <p class="text-small text-muted">Authentication is handled via secure cookies.</p>
+        <a href="/admin/login" class="btn btn-sm btn-link text-danger">Return to Login Screen</a>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthState!;
+        var user = authState.User;
+
+        if (!user.Identity!.IsAuthenticated)
+        {
+            // 基本的に[Authorize]属性でガードされますが、ロジックが必要な場合はここで記述
+        }
+    }
+}
