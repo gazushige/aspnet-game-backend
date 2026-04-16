@@ -1,0 +1,17 @@
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Components.Forms
+@attribute [RequireAntiforgeryToken]
+
+<div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light border-bottom">
+    <div>
+        <a href="/admin" class="btn btn-outline-primary">
+            <i class="bi bi-speedometer2"></i> ダッシュボード
+        </a>
+    </div>
+    <div>
+        <form action="/admin/logout-handler" method="post">
+            <AntiforgeryToken />
+            <button type="submit" class="btn btn-outline-danger">ログアウト</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,137 @@
+@page "/admin/consumable/edit/{Id:int?}"
+@using Microsoft.AspNetCore.Authorization
+@using MyApi.Models
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Forms
+@using rest.Components
+@inject ApiDbContext DbContext
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<AdminCommonHeader />
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">@(Id == null ? "消費アイテム新規登録" : "消費アイテム編集")</h3>
+                </div>
+                <div class="card-body">
+                    @if (item == null && Id != null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status"></div>
+                            <p>読み込み中...</p>
+                        </div>
+                    }
+                    else if (item != null)
+                    {
+                        <EditForm Model="item" OnValidSubmit="HandleSubmit" FormName="ConsumableEditForm">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <div class="mb-3">
+                                <label class="form-label">アイテム名 (表示名)</label>
+                                <InputText @bind-Value="item.DisplayName" class="form-control" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">説明</label>
+                                <InputTextArea @bind-Value="item.Description" class="form-control" rows="3" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">レアリティ</label>
+                                    <InputSelect @bind-Value="item.Rarity" class="form-select">
+                                        @foreach (var rarity in Enum.GetValues<ItemRarity>())
+                                        {
+                                            <option value="@rarity">@rarity</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">ステータス</label>
+                                    <InputSelect @bind-Value="item.Status" class="form-select">
+                                        @foreach (var status in Enum.GetValues<ItemStatus>())
+                                        {
+                                            <option value="@status">@status</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">使用回数 (UsageCount)</label>
+                                    <InputNumber @bind-Value="item.UsageCount" class="form-control" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">最大スタック数</label>
+                                    <InputNumber @bind-Value="item.MaxStack" class="form-control" />
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">有効期間 (秒)</label>
+                                    <InputNumber @bind-Value="item.UsagePeriodSeconds" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mt-4">
+                                        <InputCheckbox @bind-Value="item.IsConsumableByCount" class="form-check-input"
+                                                       id="checkCount" />
+                                        <label class="form-check-label" for="checkCount">回数で消費する</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mt-4">
+                                        <InputCheckbox @bind-Value="item.IsConsumableByTime" class="form-check-input"
+                                                       id="checkTime" />
+                                        <label class="form-check-label" for="checkTime">時間で消費する</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">カスタムデータ (JSONB)</label>
+                                <InputTextArea @bind-Value="item.CustomData" class="form-control" rows="4"
+                                               placeholder='{"effect": "heal", "value": 50}' />
+                            </div>
+
+                            <div class="mt-4 d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="/admin" class="btn btn-secondary me-md-2">戻る</a>
+                                <button type="submit" class="btn btn-success px-5">保存</button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private ConsumableItem? item;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+            item = await DbContext.Set<ConsumableItem>().FindAsync(Id.Value);
+        else
+            item = new ConsumableItem { Status = ItemStatus.DRAFT };
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (item == null) return;
+
+        if (Id == null) DbContext.Add(item);
+        else DbContext.Update(item);
+
+        await DbContext.SaveChangesAsync();
+        Navigation.NavigateTo("/admin");
+    }
+}

@@ -8,6 +8,15 @@ public class ServerStatusMiddleware : IMiddleware
     }
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
+        // Blazorはスキップ
+        if (context.Request.Path.StartsWithSegments("/admin") ||
+            context.Request.Path.StartsWithSegments("/_blazor") ||
+            context.Request.Path.StartsWithSegments("/_framework"))
+        {
+            await next(context);
+            return;
+        }
+
         var status = _serverStatusService.CurrentStatus;
         if (status == ServerStatus.Running || HasSkipAttribute(context))
         {

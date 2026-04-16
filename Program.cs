@@ -178,36 +178,15 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseStaticFiles(); // ★ここに移動！認証や制限の前に静的ファイルを返す
 
-// 3. ルーティング確定
-app.UseRouting();
-
-// 4. グローバルな制限
-app.UseRateLimiter();
-
-// 5. サーバー状態チェック（503を返すなら認証の前が良い）
-// これにより、メンテナンス中は認証ロジックを走らせずに済む
-app.UseMiddleware<ServerStatusMiddleware>();
-
 // 6. 認証・認可（IdentityやCookieの解決）
 app.UseAuthentication();
 app.UseAntiforgery(); // ★認証と認可の間に置くのが公式の推奨
 app.UseAuthorization();
 
-// 7. カスタム認証（APIキーや外部サービス連携）
-// これらは Authorization の後、または中で特定のパスに対して走るように調整
-app.UseMiddleware<StaffApiKeyMiddleware>();
-app.UseMiddleware<PlayFabAuthMiddleware>();
-
 //-------------------------- ここからMap -------------------------------------
 // 8. 終端（エンドポイント）
 app.MapRazorComponents<App>()
-    .RequireRateLimiting("GameLimit") // ゲームアクション系のレートリミットを適用
-    .AddInteractiveServerRenderMode()
-    .WithMetadata(new SkipPlayFabAuthAttribute()) // PlayFab認証をスキップ
-    .WithMetadata(new SkipStaffAuthAttribute()) // スタッフAPIキー認証をスキップ
-    .WithMetadata(new SkipServerStatusAttribute()); // サーバーステータスチェックをスキップ
-
-app.MapControllers();
+    .AddInteractiveServerRenderMode();
 
 // PlayFab 用の HttpClient (接続をプールして再利用)
 var httpClient = new HttpMessageInvoker(new SocketsHttpHandler
@@ -223,19 +202,13 @@ var requestConfig = new ForwarderRequestConfig { ActivityTimeout = TimeSpan.From
 
 //healthチェック用のエンドポイント
 app.MapGet("/health", () => "{\"status\":\"ok\"}").WithName("HealthCheck")
-    .DisableRateLimiting()
-    .WithMetadata(new SkipServerStatusAttribute())
-    .WithMetadata(new SkipPlayFabAuthAttribute())
-    .WithMetadata(new SkipStaffAuthAttribute());
+    .DisableRateLimiting();
 
+//サーバーステータスを返すエンドポイント。running,maintenanceなど
 app.MapGet("/status", (IServerStatusService statusService) =>
         $"{{\"status\":\"{statusService.CurrentStatus}\"}}\n")
-    .DisableRateLimiting()
-    .WithMetadata(new SkipServerStatusAttribute())
-    .WithMetadata(new SkipPlayFabAuthAttribute())
-    .WithMetadata(new SkipStaffAuthAttribute());
+    .DisableRateLimiting();
 
-// Program.cs
 app.MapPost("/admin/login-handler", async (
     HttpContext httpContext,
     IConfiguration config,
@@ -256,11 +229,32 @@ app.MapPost("/admin/login-handler", async (
     }
 
     return Results.Redirect("/admin/login?error=1");
-})
-.WithMetadata(new SkipServerStatusAttribute())
-.WithMetadata(new SkipPlayFabAuthAttribute())
-.WithMetadata(new SkipStaffAuthAttribute())
-.DisableAntiforgery(); // AntiForgeryはBlazor側で処理済みのため
+});
+app.MapPost("/admin/logout-handler", async (HttpContext httpContext) =>
+{
+    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/admin/login");
+});
+
+
+// --- 分岐 ---
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api"), api =>
+{
+    api.UseRateLimiter();
+    api.UseMiddleware<ServerStatusMiddleware>();
+    api.UseMiddleware<PlayFabAuthMiddleware>();
+});
+
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/staff"), staff =>
+{
+    staff.UseRateLimiter();
+    staff.UseMiddleware<ServerStatusMiddleware>();
+    staff.UseMiddleware<StaffApiKeyMiddleware>();
+});
+app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/playfab"), branch =>
+{
+    branch.UseRateLimiter();
+});
 
 // 全ての /playfab/{*any} へのリクエストを PlayFab に転送
 var transformer = new PlayFabForwardingTransformer();
@@ -275,15 +269,12 @@ app.Map("/playfab/{**catch-all}", async (HttpContext context, IHttpForwarder for
         Log.Warning("PlayFab proxy error: {Error}, Exception: {Exception}",
             error, errorFeature?.Exception?.Message);
     }
-})
-    .RequireRateLimiting("GameLimit")
-    .WithMetadata(new SkipPlayFabAuthAttribute())
-    .WithMetadata(new SkipStaffAuthAttribute());
+}).RequireRateLimiting("GameLimit");
 
-app.MapControllers(); // 例: ゲームアクション系のレートリミットを適用
+app.MapControllers();
 app.Run();
 
-//-------------------------------------------------------------------
+// -------------------------------------------------------------------
 // IP取得ヘルパー（Cloud Run対応：X-Forwarded-Forを優先）
 public static class HelperClass
 {

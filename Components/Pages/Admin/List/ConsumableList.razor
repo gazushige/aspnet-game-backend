@@ -1,0 +1,127 @@
+@page "/admin/consumable/list/{PageNumber:int?}"
+@using Microsoft.AspNetCore.Authorization
+@using MyApi.Models
+@using Microsoft.EntityFrameworkCore
+@using rest.Components.Pages.Admin
+@inject ApiDbContext DbContext
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<AdminCommonHeader />
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">消費アイテム一覧</h2>
+        <a href="/admin/consumable/edit" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> 新規登録
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th>表示名</th>
+                            <th>レアリティ</th>
+                            <th>ステータス</th>
+                            <th>最大スタック</th>
+                            <th class="text-end">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (items == null)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status"></div>
+                                    <div class="mt-2">読み込み中...</div>
+                                </td>
+                            </tr>
+                        }
+                        else if (!items.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    アイテムが登録されていません。
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in items)
+                            {
+                                <tr>
+                                    <td>@item.Id</td>
+                                    <td><strong>@item.DisplayName</strong></td>
+                                    <td><span class="badge border text-dark bg-light">@item.Rarity</span></td>
+                                    <td>@item.Status</td>
+                                    <td>@item.MaxStack</td>
+                                    <td class="text-end">
+                                        <a href="/admin/consumable/edit/@item.Id" class="btn btn-sm btn-outline-primary">
+                                            編集
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @if (TotalPages > 1)
+        {
+            <div class="card-footer d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination mb-0">
+                        <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+                            <a class="page-link" href="/admin/consumable/list/@(CurrentPage - 1)">前へ</a>
+                        </li>
+                        @for (int i = 1; i <= TotalPages; i++)
+                        {
+                            var p = i;
+                            <li class="page-item @(p == CurrentPage ? "active" : "")">
+                                <a class="page-link" href="/admin/consumable/list/@p">@p</a>
+                            </li>
+                        }
+                        <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+                            <a class="page-link" href="/admin/consumable/list/@(CurrentPage + 1)">次へ</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? PageNumber { get; set; }
+
+    private List<ConsumableItem>? items;
+    private const int PageSize = 50;
+    private int TotalPages;
+    private int CurrentPage => PageNumber ?? 1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var query = DbContext.Set<ConsumableItem>();
+        var totalCount = await query.CountAsync();
+        TotalPages = (int)Math.Ceiling((double)totalCount / PageSize);
+
+        // ページ番号のバリデーション
+        var actualPage = Math.Max(1, Math.Min(CurrentPage, TotalPages == 0 ? 1 : TotalPages));
+
+        items = await query
+            .OrderByDescending(i => i.Id)
+            .Skip((actualPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToListAsync();
+    }
+}
