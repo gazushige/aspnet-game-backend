@@ -4,9 +4,21 @@ namespace MyApi.Models
 {
     public class AdminDbContext(DbContextOptions<AdminDbContext> options) : BaseDbContext(options)
     {
+        // ✅ マイグレーション以外の用途を禁止
+        public override int SaveChanges()
+            => throw new InvalidOperationException("AdminDbContextはマイグレーション専用です。");
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("AdminDbContextはマイグレーション専用です。");
     }
     public class ApiDbContext(DbContextOptions<ApiDbContext> options) : BaseDbContext(options)
     {
+        // ✅ SaveChangesを呼ばせない
+        public override int SaveChanges()
+            => throw new InvalidOperationException("ApiDbContextは読み取り専用です。");
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("ApiDbContextは読み取り専用です。");
     }
     public class StaffDbContext(DbContextOptions<StaffDbContext> options) : BaseDbContext(options)
     {
@@ -44,6 +56,10 @@ namespace MyApi.Models
         public DbSet<Achievement> Achievements => Set<Achievement>();
         public DbSet<Shop> Shops => Set<Shop>();
         public DbSet<ShopItem> ShopItems => Set<ShopItem>();
+        public DbSet<VipMaster> VipMasters => Set<VipMaster>();
+        public DbSet<WorldPhaseMaster> WorldPhaseMasters => Set<WorldPhaseMaster>();
+        public DbSet<WorldProgressState> WorldProgressStates => Set<WorldProgressState>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

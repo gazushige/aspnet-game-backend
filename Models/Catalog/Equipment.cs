@@ -6,7 +6,7 @@ namespace MyApi.Models
     /// <summary>
     /// 装備品を表す（マスターデータ）
     /// </summary>
-    public class EquipmentItem : SellableCatalogItem
+    public class EquipmentItem : SellableCatalogItem, IHasEffect
     {
         public EquipmentItem()
         {

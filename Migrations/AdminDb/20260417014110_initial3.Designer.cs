@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace rest.Migrations.AdminDb
 {
     [DbContext(typeof(AdminDbContext))]
-    partial class AdminDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417014110_initial3")]
+    partial class initial3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -407,14 +410,7 @@ namespace rest.Migrations.AdminDb
                         .IsUnique()
                         .HasDatabaseName("UQ_CatalogVersion_SemVer");
 
-                    b.ToTable("catalog_versions", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_version_major_positive", "\"Major\" >= 0");
-
-                            t.HasCheckConstraint("CK_version_minor_positive", "\"Minor\" >= 0");
-
-                            t.HasCheckConstraint("CK_version_patch_positive", "\"Patch\" >= 0");
-                        });
+                    b.ToTable("catalog_versions", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.ConsumableItem", b =>
@@ -1502,68 +1498,6 @@ namespace rest.Migrations.AdminDb
                     b.ToTable("update_versions", (string)null);
                 });
 
-            modelBuilder.Entity("MyApi.Models.VipMaster", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<string>("CustomData")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("custom_data");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)")
-                        .HasColumnName("description");
-
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer")
-                        .HasColumnName("icon_asset_id");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("name");
-
-                    b.Property<decimal>("PointMultiplier")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasColumnName("point_multiplier");
-
-                    b.Property<long>("RequiredPoint")
-                        .HasColumnType("bigint")
-                        .HasColumnName("required_point");
-
-                    b.Property<string>("Requirement")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("requirement");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer")
-                        .HasColumnName("sort_order");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IconAssetId")
-                        .HasDatabaseName("ix_vip_masters_icon_asset_id");
-
-                    b.HasIndex("Level")
-                        .IsUnique()
-                        .HasDatabaseName("ix_vip_masters_level");
-
-                    b.HasIndex("SortOrder")
-                        .HasDatabaseName("ix_vip_masters_sort_order");
-
-                    b.ToTable("vip_masters", (string)null);
-                });
-
             modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
                 {
                     b.Property<int>("Id")
@@ -1606,109 +1540,6 @@ namespace rest.Migrations.AdminDb
                         .IsUnique();
 
                     b.ToTable("virtual_currencies", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.WorldPhaseMaster", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<int?>("BannerAssetId")
-                        .HasColumnType("integer")
-                        .HasColumnName("banner_asset_id");
-
-                    b.Property<string>("CustomData")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("custom_data");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)")
-                        .HasColumnName("description");
-
-                    b.Property<DateTimeOffset?>("ForceProgressAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("force_progress_at");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("name");
-
-                    b.Property<int>("Phase")
-                        .HasColumnType("integer")
-                        .HasColumnName("phase");
-
-                    b.Property<string>("Requirement")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("requirement");
-
-                    b.Property<DateTimeOffset?>("UnlockAfter")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("unlock_after");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BannerAssetId");
-
-                    b.HasIndex("ForceProgressAt")
-                        .HasDatabaseName("ix_world_phase_masters_force_progress_at");
-
-                    b.HasIndex("Phase")
-                        .IsUnique()
-                        .HasDatabaseName("ix_world_phase_masters_phase");
-
-                    b.HasIndex("UnlockAfter")
-                        .HasDatabaseName("ix_world_phase_masters_unlock_after");
-
-                    b.ToTable("world_phase_masters", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.WorldProgressState", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    b.Property<int>("ActivePlayerCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("active_player_count");
-
-                    b.Property<decimal>("AvgPlayerLevel")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)")
-                        .HasColumnName("avg_player_level");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("CurrentPhase")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_phase");
-
-                    b.Property<DateTimeOffset>("LastAggregatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_aggregated_at");
-
-                    b.Property<DateTimeOffset>("PhaseStartedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("phase_started_at");
-
-                    b.Property<long>("TotalBossKillCount")
-                        .HasColumnType("bigint")
-                        .HasColumnName("total_boss_kill_count");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("world_progress_state", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.SkillTree", b =>
@@ -2119,26 +1950,6 @@ namespace rest.Migrations.AdminDb
                     b.Navigation("App");
 
                     b.Navigation("Asset");
-                });
-
-            modelBuilder.Entity("MyApi.Models.VipMaster", b =>
-                {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("IconAsset");
-                });
-
-            modelBuilder.Entity("MyApi.Models.WorldPhaseMaster", b =>
-                {
-                    b.HasOne("MyApi.Models.AddressableAsset", "BannerAsset")
-                        .WithMany()
-                        .HasForeignKey("BannerAssetId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("BannerAsset");
                 });
 
             modelBuilder.Entity("MyApi.Models.SkillNode", b =>

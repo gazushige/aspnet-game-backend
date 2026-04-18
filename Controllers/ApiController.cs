@@ -12,12 +12,10 @@ namespace MyApi.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [EnableRateLimiting("GameLimit")]
-    [SkipStaffAuth] // スタッフ認証をスキップ
-    public abstract class ApiController(ApiDbContext dbContext, IConfiguration config) : ControllerBase
+    public partial class ApiController(ApiDbContext dbContext, IConfiguration config) : ControllerBase
     {
         // 共通の機能や設定をここに追加可能
-        protected readonly ApiDbContext _db = dbContext;
-        protected readonly IConfiguration _config = config;
-
+        private readonly ApiDbContext _db = dbContext;
+        private readonly IConfiguration _config = config;
     }
 }

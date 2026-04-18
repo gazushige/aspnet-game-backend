@@ -221,4 +221,11 @@ namespace MyApi.Models
     {
         string? CustomData { get; set; }
     }
+    /// <summary>
+    /// 前提条件があるエンティティのインターフェース。
+    /// </summary> 
+    interface IHasRequirement
+    {
+        string? Requirement { get; set; }
+    }
 }

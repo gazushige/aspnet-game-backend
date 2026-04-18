@@ -23,5 +23,8 @@ namespace MyApi.Controllers
     public class DropItemController(StaffDbContext db) : CrudController<DropItem>(db) { }
 
     public class VirtualCurrencyController(StaffDbContext db) : CrudController<VirtualCurrency>(db) { }
+    public class MaterialController(StaffDbContext db) : CrudController<Material>(db) { }
+    public class TitleController(StaffDbContext db) : CrudController<Title>(db) { }
+
 
 }

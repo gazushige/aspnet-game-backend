@@ -1,5 +1,8 @@
 namespace MyApi.Models
 {
+    /// <summary>
+    /// DAG(有向非巡回グラフ)を表すクラス
+    /// </summary>
     public abstract class Dag : IEntity
     {
         public int Id { get; set; }

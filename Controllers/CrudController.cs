@@ -7,14 +7,12 @@ namespace MyApi.Controllers
 {
     /// <summary>
     /// CRUD操作を行うためのベースコントローラー
-    /// ApiDbContextを注入して、共通のCRUD操作を提供する。具体的なエンティティごとのコントローラーはこれを継承して作成する。
+    /// StaffDbContextを注入して、共通のCRUD操作を提供する。具体的なエンティティごとのコントローラーはこれを継承して作成する。
     /// </summary>
 
     [ApiController]
     [Route("staff/[controller]")]
     [EnableRateLimiting("StaffLimit")]
-    [SkipPlayFabAuth] // PlayFab認証をスキップ
-    [SkipServerStatus] // サーバーステータスチェックをスキップ
     public abstract class CrudController<T>(StaffDbContext db) : ControllerBase where T : class, IEntity
     {
         protected readonly StaffDbContext _db = db;
@@ -24,7 +22,8 @@ namespace MyApi.Controllers
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 50)
         {
-            pageSize = Math.Min(pageSize, 200); // 上限を設ける
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 200);
             var items = await _db.Set<T>()
                 .OrderBy(c => c.Id)
                 .Skip((page - 1) * pageSize)
@@ -42,13 +41,17 @@ namespace MyApi.Controllers
         }
 
         [HttpPost]
-        public virtual async Task<ActionResult<T>> Create(T entity)
+        public virtual async Task<ActionResult<IEnumerable<T>>> Create(List<T> entities)
         {
-            _db.Set<T>().Add(entity);
-            await _db.SaveChangesAsync(); // ← これが必須！
+            if (entities == null || entities.Count == 0)
+            {
+                return BadRequest("Request body must be a non-empty array.");
+            }
 
-            // GetById メソッドを呼び出すための情報を返却 (RESTfulな作法)
-            return CreatedAtAction(nameof(GetById), new { id = GetEntityId(entity) }, entity);
+            _db.Set<T>().AddRange(entities);
+            await _db.SaveChangesAsync();
+
+            return Ok(entities);
         }
 
         [HttpPut("{id}")]
@@ -75,9 +78,5 @@ namespace MyApi.Controllers
 
             return NoContent();
         }
-
-        // IDを動的に取得するためのヘルパー（継承先で override するか、Reflection等で取得）
-        // とりあえず動かすなら単純な return Ok(entity) でも大丈夫です。
-        protected virtual object GetEntityId(T entity) => entity.Id;
     }
 }

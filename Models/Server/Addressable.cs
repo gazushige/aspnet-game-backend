@@ -9,7 +9,6 @@ namespace MyApi.Models
        public class AddressableAsset : IHasTimestamps, IEntity
        {
               public int Id { get; set; }
-
               public string Name { get; set; } = string.Empty;
               public string? Label { get; set; }
               public string Path { get; set; } = string.Empty;

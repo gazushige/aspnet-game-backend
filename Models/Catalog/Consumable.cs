@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// 消費アイテムを表す（マスターデータ）
     /// </summary>
-    public class ConsumableItem : SellableCatalogItem
+    public class ConsumableItem : SellableCatalogItem, IHasEffect
     {
         public int UsageCount { get; set; } = 1;    // 消費アイテムの使用回数。1回使い切りのアイテムは1、複数回使えるアイテムは2以上の値を設定する。例：回復薬（UsageCount=1）、スタミナドリンク（UsageCount=3）など
         public int? UsagePeriodSeconds { get; set; }    // 消費アイテムの使用期間（秒）。時間制の消費アイテムの場合は、使用開始からこの期間が経過するとアイテムが消費される。例：経験値ブースト（UsagePeriodSeconds=3600）など。回数制のアイテムの場合はnullを設定する。

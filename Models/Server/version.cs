@@ -14,9 +14,9 @@ namespace MyApi.Models
     public interface IVersion
     {
         int Id { get; }
-        ushort Major { get; }
-        ushort Minor { get; }
-        ushort Patch { get; }
+        int Major { get; }
+        int Minor { get; }
+        int Patch { get; }
         string SemVer { get; }
         VersionStatus Status { get; }
         DateTimeOffset? ReleasedAt { get; }
@@ -35,9 +35,9 @@ namespace MyApi.Models
     public abstract class VersionBase : IEntity, IHasTimestamps, IVersion
     {
         public int Id { get; set; }
-        public ushort Major { get; set; }
-        public ushort Minor { get; set; }
-        public ushort Patch { get; set; }
+        public int Major { get; set; }
+        public int Minor { get; set; }
+        public int Patch { get; set; }
         public string? Description { get; set; }
         public VersionStatus Status { get; set; } = VersionStatus.Draft;
         public DateTimeOffset? ReleasedAt { get; set; }
@@ -50,7 +50,7 @@ namespace MyApi.Models
         /// <summary>
         /// バージョンの大小比較用タプル（Major, Minor, Patch の辞書順）
         /// </summary>
-        private (ushort, ushort, ushort) VersionTuple => (Major, Minor, Patch);
+        private (int, int, int) VersionTuple => (Major, Minor, Patch);
 
         // -------------------------------------------------------
         // クエリ系：DbContextへの依存を避け、呼び出し元がコレクションを渡す
@@ -76,7 +76,8 @@ namespace MyApi.Models
 
             return allVersions
                 .Where(v => v.Status != VersionStatus.Blocked
-                         && Compare(v, released) < 0)
+                        && v.Status != VersionStatus.Staging
+                        && Compare(v, released) < 0)
                 .OrderByDescending(v => v.Major)
                 .ThenByDescending(v => v.Minor)
                 .ThenByDescending(v => v.Patch)
@@ -104,18 +105,25 @@ namespace MyApi.Models
         /// - コレクション内に Released が存在しないこと
         /// どちらかを満たさない場合は何もしない（冪等）。
         /// </summary>
-        public void ReleaseThisVersion<T>(IEnumerable<T> allVersions)
-            where T : VersionBase
+        public bool TryReleaseThisVersion<T>(IEnumerable<T> allVersions, out string? failReason)
+          where T : VersionBase
         {
             if (Status != VersionStatus.Draft)
-                return;
-
+            {
+                failReason = $"ステータスがDraftではありません: {Status}";
+                return false;
+            }
             if (allVersions.Any(v => v.Status == VersionStatus.Released))
-                return;
+            {
+                failReason = "既にReleasedバージョンが存在します";
+                return false;
+            }
 
             Status = VersionStatus.Released;
-            ReleasedAt = DateTime.UtcNow;
-            UpdatedAt = DateTime.UtcNow;
+            ReleasedAt = DateTimeOffset.UtcNow; // ✅ DateTimeOffset.UtcNowに統一
+            UpdatedAt = DateTimeOffset.UtcNow;
+            failReason = null;
+            return true;
         }
 
         /// <summary>
@@ -134,11 +142,11 @@ namespace MyApi.Models
                 return;
 
             Status = VersionStatus.Draft;
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTimeOffset.UtcNow;
 
             previous.Status = VersionStatus.Released;
-            previous.ReleasedAt = DateTime.UtcNow;
-            previous.UpdatedAt = DateTime.UtcNow;
+            previous.ReleasedAt = DateTimeOffset.UtcNow;
+            previous.UpdatedAt = DateTimeOffset.UtcNow;
         }
 
         /// <summary>
@@ -163,11 +171,11 @@ namespace MyApi.Models
                     $"次のバージョン ({nextVersion.SemVer}) は現在のバージョン ({SemVer}) を上回っている必要があります。");
 
             Status = VersionStatus.Deprecated;
-            UpdatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTimeOffset.UtcNow;
 
             nextVersion.Status = VersionStatus.Released;
-            nextVersion.ReleasedAt = DateTime.UtcNow;
-            nextVersion.UpdatedAt = DateTime.UtcNow;
+            nextVersion.ReleasedAt = DateTimeOffset.UtcNow;
+            nextVersion.UpdatedAt = DateTimeOffset.UtcNow;
         }
 
         /// <summary>SemVer の大小比較（戻り値は IComparable 規約に従う）</summary>
@@ -223,9 +231,9 @@ namespace MyApi.Models
         public int Id { get; set; }
 
         // IVersion の実装：AppVersion の値を委譲
-        public ushort Major => App.Major;
-        public ushort Minor => App.Minor;
-        public ushort Patch => App.Patch;
+        public int Major => App.Major;
+        public int Minor => App.Minor;
+        public int Patch => App.Patch;
         public string SemVer => App.SemVer;
         public VersionStatus Status => App.Status;
         public DateTimeOffset? ReleasedAt => App.ReleasedAt;
@@ -307,7 +315,12 @@ namespace MyApi.Models
         public override void Configure(EntityTypeBuilder<CatalogVersion> builder)
         {
             base.Configure(builder);
-            builder.ToTable("catalog_versions");
+            builder.ToTable("catalog_versions", t =>
+            {
+                t.HasCheckConstraint("CK_version_major_positive", "\"Major\" >= 0");
+                t.HasCheckConstraint("CK_version_minor_positive", "\"Minor\" >= 0");
+                t.HasCheckConstraint("CK_version_patch_positive", "\"Patch\" >= 0");
+            });
 
             builder.HasIndex(e => new { e.Major, e.Minor, e.Patch })
                    .IsUnique()

@@ -14,6 +14,8 @@ using OpenTelemetry.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.AspNetCore.SignalR;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -105,20 +107,24 @@ builder.Services.AddHttpForwarder(); // Forwarderを登録
 
 builder.Host.UseSerilog();
 
-// DB接続設定を追加 (SQLite)
-//本番はpostgresqlに切り替える予定
 builder.Services
+    .AddSingleton<TimestampInterceptor>()
     .AddDbContext<AdminDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("AdminContext")))
+        options.UseNpgsql(builder.Configuration.GetConnectionString("AdminContext")))
     .AddDbContext<ApiDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ApiContext")))
-    // options.UseSqlite("Data Source=data.db"))
-    .AddDbContext<StaffDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("StaffContext")));
-// options.UseSqlite("Data Source=data.db"));
+        options.UseNpgsql(builder.Configuration.GetConnectionString("ApiContext"))
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            .ReplaceService<IMigrator, DisabledMigrator>()) // ✅ Migratorを無効化
+    .AddDbContext<StaffDbContext>((sp, options) =>
+        options.AddInterceptors(sp.GetRequiredService<TimestampInterceptor>())
+            .UseNpgsql(builder.Configuration.GetConnectionString("StaffContext"))
+            .ReplaceService<IMigrator, DisabledMigrator>()); // ✅ Migratorを無効化
+builder.Services.AddHostedService<MigrationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(); // .NET 9 標準の OpenAPI 登録
+
+builder.Services.AddSignalR();  // SignalRの登録
 
 builder.Services.AddAuthentication(); // 認証サービスの追加（必要に応じて設定）
 builder.Services.AddAuthorization();  // 認可サービスの追加（必要に応じて設定）
@@ -248,13 +254,24 @@ app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api"), api =>
 app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/staff"), staff =>
 {
     staff.UseRateLimiter();
-    staff.UseMiddleware<ServerStatusMiddleware>();
     staff.UseMiddleware<StaffApiKeyMiddleware>();
 });
+
 app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/playfab"), branch =>
 {
     branch.UseRateLimiter();
+    branch.UseMiddleware<ServerStatusMiddleware>();
 });
+app.UseRouting();                    // ① ルーティング
+
+app.UseWhen(                         // ② 分岐ミドルウェア
+    ctx => ctx.Request.Path.StartsWithSegments("/chat"),
+    branch =>
+    {
+        branch.UseMiddleware<ServerStatusMiddleware>();   // メンテ判定
+        branch.UseMiddleware<PlayFabAuthMiddleware>();    // 認証
+    }
+);
 
 // 全ての /playfab/{*any} へのリクエストを PlayFab に転送
 var transformer = new PlayFabForwardingTransformer();
@@ -272,6 +289,7 @@ app.Map("/playfab/{**catch-all}", async (HttpContext context, IHttpForwarder for
 }).RequireRateLimiting("GameLimit");
 
 app.MapControllers();
+app.MapHub<ChatHub>("/chat");  // SignalRの端点 (例: /chat)
 app.Run();
 
 // -------------------------------------------------------------------
@@ -315,4 +333,29 @@ public sealed class PlayFabForwardingTransformer : HttpTransformer
         proxyRequest.Headers.Remove("X-Real-IP");
         proxyRequest.Headers.TryAddWithoutValidation("X-Real-IP", clientIp);
     }
+}
+
+// admin以外でのマイグレーションを禁止するクラス
+public class DisabledMigrator : IMigrator
+{
+    private const string Message = "このContextではマイグレーションは禁止です。AdminDbContextを使用してください。";
+
+    public string GenerateScript(
+        string? fromMigration = null,
+        string? toMigration = null,
+        MigrationsSqlGenerationOptions options = MigrationsSqlGenerationOptions.Default)
+        => throw new InvalidOperationException(Message);
+
+    public void Migrate(string? targetMigration = null)
+        => throw new InvalidOperationException(Message);
+
+    public Task MigrateAsync(
+        string? targetMigration = null,
+        CancellationToken cancellationToken = default)
+        => throw new InvalidOperationException(Message);
+
+    // ✅ .NET9で追加されたメソッド
+    // 未適用のマイグレーションがあるか確認するメソッドだが
+    // このContextではマイグレーション自体禁止なので常にfalseを返す
+    public bool HasPendingModelChanges() => false;
 }
