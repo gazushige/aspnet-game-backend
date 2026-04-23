@@ -28,19 +28,11 @@ namespace MyApi.Models
     public class BundledItem : IEntity
     {
         public int Id { get; set; }
-        public int CatalogId { get; set; }
-        public Catalog Catalog { get; set; } = null!;
+        public Guid CatalogId { get; set; }
+        public CatalogCategory Category { get; set; } = CatalogCategory.OTHER;
         public int Quantity { get; set; }
-        public RewardItemType ItemType { get; set; } = RewardItemType.Item;
     }
 
-    public enum RewardItemType
-    {
-        Item,
-        Currency,
-        Character,
-        Ticket,
-    }
 
     // =========================================================
     // 条件定義（JSONB）

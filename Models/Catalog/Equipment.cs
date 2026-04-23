@@ -6,13 +6,9 @@ namespace MyApi.Models
     /// <summary>
     /// 装備品を表す（マスターデータ）
     /// </summary>
-    public class EquipmentItem : SellableCatalogItem, IHasEffect
+    public class EquipmentItem : SellableCatalogItem, IHasCustomData
     {
-        public EquipmentItem()
-        {
-            // 装備品はスタック不可を強制
-            IsStackable = false;
-        }
+        public override bool IsStackable => false; // 装備品はスタック不可で固定
 
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
 
@@ -44,12 +40,12 @@ namespace MyApi.Models
             // 4. Django の Meta constraints 相当の設定
 
             // UQ: カタログUUIDとリビジョンの一意性
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision })
+            builder.HasIndex(e => new { e.Uuid, e.Revision })
                    .IsUnique()
                    .HasDatabaseName("UQ_Equipment_Catalog_Revision");
 
             // Partial Index: 現在有効なバージョンはカタログごとに1つだけ
-            builder.HasIndex(e => e.CatalogUuid)
+            builder.HasIndex(e => e.Uuid)
                    .IsUnique()
                    .HasFilter("\"IsCurrentVersion\" = TRUE")
                    .HasDatabaseName("UQ_Equipment_CurrentVersion");

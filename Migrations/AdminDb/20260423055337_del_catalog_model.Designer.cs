@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApi.Models;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace rest.Migrations.AdminDb
 {
     [DbContext(typeof(AdminDbContext))]
-    partial class AdminDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260423055337_del_catalog_model")]
+    partial class del_catalog_model
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -77,7 +80,6 @@ namespace rest.Migrations.AdminDb
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Label")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -237,8 +239,10 @@ namespace rest.Migrations.AdminDb
                     b.Property<int?>("AchievementTierId")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("CatalogId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("CatalogId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -382,9 +386,6 @@ namespace rest.Migrations.AdminDb
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
@@ -411,6 +412,10 @@ namespace rest.Migrations.AdminDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<int>("MaxStack")
                         .ValueGeneratedOnAdd()
@@ -455,8 +460,6 @@ namespace rest.Migrations.AdminDb
                         .HasColumnType("integer");
 
                     b.HasKey("Uuid");
-
-                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("IsCurrentVersion");
 
@@ -699,14 +702,14 @@ namespace rest.Migrations.AdminDb
                     b.Property<int>("DropTableId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("NumberInPrefix")
                         .HasColumnType("integer");
@@ -729,8 +732,6 @@ namespace rest.Migrations.AdminDb
                     b.HasKey("Uuid");
 
                     b.HasIndex("DropTableId");
-
-                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("PrefixId");
 
@@ -760,9 +761,6 @@ namespace rest.Migrations.AdminDb
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
@@ -787,6 +785,10 @@ namespace rest.Migrations.AdminDb
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
 
                     b.Property<int>("NumberInPrefix")
                         .HasColumnType("integer");
@@ -818,8 +820,6 @@ namespace rest.Migrations.AdminDb
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Uuid");
-
-                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("IsCurrentVersion");
 
@@ -884,14 +884,14 @@ namespace rest.Migrations.AdminDb
                     b.Property<DateTimeOffset?>("ExpiredAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("NumberInPrefix")
                         .HasColumnType("integer");
@@ -934,8 +934,6 @@ namespace rest.Migrations.AdminDb
 
                     b.HasKey("Uuid");
 
-                    b.HasIndex("IconAssetId");
-
                     b.HasIndex("PrefixId");
 
                     b.HasIndex("SingleCostCurrencyId");
@@ -961,9 +959,6 @@ namespace rest.Migrations.AdminDb
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
@@ -972,6 +967,9 @@ namespace rest.Migrations.AdminDb
 
                     b.Property<bool>("IsPickup")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("LotteryId")
                         .HasColumnType("integer");
@@ -1011,8 +1009,6 @@ namespace rest.Migrations.AdminDb
 
                     b.HasKey("Uuid");
 
-                    b.HasIndex("IconAssetId");
-
                     b.HasIndex("LotteryUuid");
 
                     b.HasIndex("PrefixId");
@@ -1036,14 +1032,14 @@ namespace rest.Migrations.AdminDb
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("LotteryId")
                         .HasColumnType("integer");
@@ -1077,8 +1073,6 @@ namespace rest.Migrations.AdminDb
 
                     b.HasKey("Uuid");
 
-                    b.HasIndex("IconAssetId");
-
                     b.HasIndex("LotteryUuid");
 
                     b.HasIndex("PrefixId");
@@ -1102,9 +1096,6 @@ namespace rest.Migrations.AdminDb
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
@@ -1119,6 +1110,9 @@ namespace rest.Migrations.AdminDb
 
                     b.Property<bool>("IsTradable")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("MaxQuantity")
                         .HasColumnType("integer");
@@ -1142,8 +1136,6 @@ namespace rest.Migrations.AdminDb
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Uuid");
-
-                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("PrefixId");
 
@@ -1196,14 +1188,14 @@ namespace rest.Migrations.AdminDb
                     b.Property<int>("ExpTableId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("IconAssetId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<int>("NumberInPrefix")
                         .HasColumnType("integer");
@@ -1229,8 +1221,6 @@ namespace rest.Migrations.AdminDb
                     b.HasKey("Uuid");
 
                     b.HasIndex("ExpTableId");
-
-                    b.HasIndex("IconAssetId");
 
                     b.HasIndex("PrefixId");
 
@@ -1393,6 +1383,9 @@ namespace rest.Migrations.AdminDb
 
                     b.Property<bool>("IsCurrentVersion")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("ItemImageUrl")
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1811,18 +1804,11 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.ConsumableItem", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("IconAsset");
 
                     b.Navigation("Prefix");
                 });
@@ -1891,10 +1877,6 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
@@ -1903,35 +1885,22 @@ namespace rest.Migrations.AdminDb
 
                     b.Navigation("DropTable");
 
-                    b.Navigation("IconAsset");
-
                     b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.EquipmentItem", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IconAsset");
-
                     b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.Lottery", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
@@ -1950,8 +1919,6 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IconAsset");
-
                     b.Navigation("Prefix");
 
                     b.Navigation("SingleCostCurrency");
@@ -1961,10 +1928,6 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.LotteryPrize", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
                         .WithMany("Prizes")
                         .HasForeignKey("LotteryUuid")
@@ -1977,8 +1940,6 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IconAsset");
-
                     b.Navigation("Lottery");
 
                     b.Navigation("Prefix");
@@ -1986,10 +1947,6 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
                         .WithMany("Rarities")
                         .HasForeignKey("LotteryUuid")
@@ -2002,8 +1959,6 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("IconAsset");
-
                     b.Navigation("Lottery");
 
                     b.Navigation("Prefix");
@@ -2011,17 +1966,11 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Material", b =>
                 {
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("IconAsset");
 
                     b.Navigation("Prefix");
                 });
@@ -2034,10 +1983,6 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
-                        .WithMany()
-                        .HasForeignKey("IconAssetId");
-
                     b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
                         .HasForeignKey("PrefixId")
@@ -2045,8 +1990,6 @@ namespace rest.Migrations.AdminDb
                         .IsRequired();
 
                     b.Navigation("ExpTable");
-
-                    b.Navigation("IconAsset");
 
                     b.Navigation("Prefix");
                 });

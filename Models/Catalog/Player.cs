@@ -27,7 +27,7 @@ namespace MyApi.Models
     /// <summary>
     /// ガチャ景品としてのプレイヤーキャラクター
     /// </summary>
-    public class Player : CatalogItemBase, IHasEffect// CharacterCatalogItem の代わり
+    public class Player : CatalogItemBase, IHasCustomData// CharacterCatalogItem の代わり
     {
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
 
@@ -73,11 +73,11 @@ namespace MyApi.Models
                    .OnDelete(DeleteBehavior.Restrict); // 勝手にテーブルが消されないよう保護
 
             // Django の Meta constraints 相当
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision })
+            builder.HasIndex(e => new { e.Uuid, e.Revision })
                    .IsUnique()
                    .HasDatabaseName("UQ_Player_Catalog_Revision");
 
-            builder.HasIndex(e => e.CatalogUuid)
+            builder.HasIndex(e => e.Uuid)
                    .IsUnique()
                    .HasFilter("\"IsCurrentVersion\" = TRUE")
                    .HasDatabaseName("UQ_Player_CurrentVersion");

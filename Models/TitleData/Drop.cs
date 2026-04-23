@@ -7,12 +7,14 @@ namespace MyApi.Models
     /// <summary>
     /// ドロップテーブル本体（PlayFabのRandomResultTableに相当）
     /// </summary>
-    public class DropTable : IEntity
+    public class DropTable : IEntity, IHasCustomData
     {
         public int Id { get; set; }
         public string KeyCode { get; set; } = string.Empty; // PlayFab側のTableId
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
+        public string? CustomData { get; set; }
+
 
         // 多対多のナビゲーション
         public ICollection<DropItem> DropItems { get; set; } = new List<DropItem>();
@@ -27,14 +29,12 @@ namespace MyApi.Models
         public int DropTableId { get; set; }
         public DropTable DropTable { get; set; } = null!;
 
-        public Guid CatalogUuid { get; set; }
-        public Catalog Catalog { get; set; } = null!;
-
+        public Guid CatalogUuid { get; set; }   // CatalogItemBaseのUuidを参照するための外部キー 1対多
+        public CatalogCategory CatalogCategory { get; set; } // アイテムのカテゴリを直接保持しておく（クエリの効率化のため）
         public int MinQuantity { get; set; } = 1;
         public int MaxQuantity { get; set; } = 1;
-        public int Weight { get; set; } = 1;
-        public bool IsGuaranteed { get; set; } = false;
-        public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
+        public int Weight { get; set; } = 1;    // ドロップの重み（確率）を表す。PlayFabの仕様に合わせて整数で管理。例: 1000なら全体の中で10%の確率。-1なら確定ドロップ。
+        public bool IsGuaranteed => Weight == -1; // 重みが-1なら確定ドロップとみなす
     }
     public class DropTableConfiguration : IEntityTypeConfiguration<DropTable>
     {
@@ -63,17 +63,6 @@ namespace MyApi.Models
                    .WithMany(t => t.DropItems)
                    .HasForeignKey(e => e.DropTableId)
                    .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasOne(e => e.Catalog)
-                   .WithMany()
-                   .HasForeignKey(e => e.CatalogUuid) // DropItem側のカラム
-                   .HasPrincipalKey(c => c.Uuid)    // ★ここを追加！Catalog側のどのカラムを指すか指定
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            // 3. Enum設定
-            builder.Property(e => e.Rarity)
-                   .HasConversion<string>()
-                   .HasMaxLength(20);
 
             // 4. パフォーマンス用インデックス
             // 主キーで {DropTableId, CatalogUuid} はカバーされているが、

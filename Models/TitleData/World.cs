@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// ワールドフェーズのマスターデータ。
     /// 「どうなったら進む」「進んだら何が変わる」を定義する。
     /// </summary>
-    public class WorldPhaseMaster : IEntity, IHasEffect, IHasRequirement
+    public class WorldPhaseMaster : IEntity, IHasCustomData, IHasRequirement
     {
         public int Id { get; set; }
 
@@ -56,7 +56,7 @@ namespace MyApi.Models
     /// サーバー全体の現在フェーズ進行状態。
     /// レコードは常に1件のみ (Id=1固定)。
     /// </summary>
-    public class WorldProgressState : IHasTimestamps
+    public class WorldProgressState : IHasTimestamps, IEntity
     {
         public int Id { get; set; } = 1;
 

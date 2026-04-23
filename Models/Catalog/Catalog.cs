@@ -1,66 +1,56 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.ComponentModel.DataAnnotations;
 
 namespace MyApi.Models
 {
     /// <summary>
-    /// カタログアイテムのカテゴリ。大分類。アイテム以外にも存在する。例：キャラクター、武器、敵、ガチャなど
+    /// カタログアイテムのカテゴリ。大分類。アイテム以外にも存在する。例：キャラクター、武器、防具、敵、ガチャなど
     /// </summary>
-    public class CatalogCategory : IEntity
+    public enum CatalogCategory
     {
-        public int Id { get; set; }
-        public string Code { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string? Description { get; set; }
-        public bool IsActive { get; set; } = true;
-
-        // ナビゲーション (virtualを削除)
-        public ICollection<CatalogSeries> Series { get; set; } = new List<CatalogSeries>();
+        WEAPON,
+        ARMOR,
+        CONSUMABLE,
+        CHARACTER,
+        ENEMY,
+        GACHA,
+        OTHER
     }
     /// <summary>
-    /// カタログアイテムのprefixを管理するためのもの。より細分化されたカテゴリ
+    /// カタログアイテムのprefixを管理するためのもの。より細分化されたカテゴリ。jsonシリアライズ時のkeyにする文字列のprefixにする。例：weapon001
     /// </summary> 
-    public class CatalogSeries : IEntity
+    public class CatalogPrefix : IEntity
     {
         public int Id { get; set; }
         public int CategoryId { get; set; }
-        public CatalogCategory Category { get; set; } = null!; // virtualを削除
+        public CatalogCategory Category { get; set; } = CatalogCategory.OTHER;
 
         public string Prefix { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public int LastNumber { get; set; }
     }
-    /// <summary>
-    /// カタログアイテムのID。UUIDで管理。シリーズIDと通し番号も保持する。例：キャラクターシリーズの001番目のアイテム、武器シリーズの002番目のアイテムなど。アイテムの内容はCatalogItemBaseを継承した具体的なクラスで管理する。
-    /// </summary>
-    public class Catalog : IEntity
-    {
-        public int Id { get; set; }
-        public Guid Uuid { get; set; }
-        public int SeriesId { get; set; }
-        public CatalogSeries Series { get; set; } = null!;
-        public int Number { get; set; }
-
-        public bool IsLocked { get; set; }
-        public string Code => Series.Prefix + string.Format("{0:0>3}", Number);
-    }
 
     /// <summary>
     /// カタログアイテムの基本クラス。シリーズごとにアイテムの内容は異なるが、共通の属性をここで定義する。シリーズごとに個別のテーブルを作る場合は、これを継承して具体的なアイテムクラスを作成する。
     /// </summary>
-    public abstract class CatalogItemBase : IHasTimestamps, IEntity
+    public abstract class CatalogItemBase : IHasTimestamps, IEntity, IHasUuid
     {
         public int Id { get; set; }
-        public Guid CatalogUuid { get; set; } = Guid.CreateVersion7();// CatalogId.Uuid への外部キー
-        public Catalog Catalog { get; set; } = null!;
-
+        [Key]
+        public Guid Uuid { get; init; } = Guid.CreateVersion7();
+        public int PrefixId { get; set; }
+        public CatalogPrefix Prefix { get; set; } = null!;
+        public int NumberInPrefix { get; set; }     //同じprefixの中で何番目か
+        public string Code => Prefix.Prefix + string.Format("{0:0>3}", NumberInPrefix);     //例：weapon001     jsonのkeyに使用する
         public int Revision { get; set; } = 1;
         public string DisplayName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsCurrentVersion { get; set; }
         public string? Tags { get; set; }
-        public string? ItemImageUrl { get; set; }
+        public int? IconAssetId { get; set; }
+        public AddressableAsset? IconAsset { get; set; }
         public ItemStatus Status { get; set; } = ItemStatus.DRAFT;
 
         public DateTimeOffset CreatedAt { get; set; }
@@ -70,11 +60,11 @@ namespace MyApi.Models
 
 namespace MyApi.Models
 {
-    public class CatalogSeriesConfiguration : IEntityTypeConfiguration<CatalogSeries>
+    public class CatalogPrefixConfiguration : IEntityTypeConfiguration<CatalogPrefix>
     {
-        public void Configure(EntityTypeBuilder<CatalogSeries> builder)
+        public void Configure(EntityTypeBuilder<CatalogPrefix> builder)
         {
-            builder.ToTable("catalog_series");
+            builder.ToTable("catalog_prefixes");
             builder.HasKey(e => e.Id);
 
             // ここに制約をすべて書く
@@ -82,43 +72,25 @@ namespace MyApi.Models
 
             builder.HasIndex(e => new { e.CategoryId, e.Prefix })
                    .IsUnique()
-                   .HasDatabaseName("UQ_CatalogSeries_Category_Prefix");
+                   .HasDatabaseName("UQ_CatalogPrefix_Category_Prefix");
 
-            builder.HasOne(e => e.Category)
-                   .WithMany(c => c.Series)
-                   .HasForeignKey(e => e.CategoryId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(e => e.Category);
+
         }
     }
-
-    public class CatalogCategoryConfiguration : IEntityTypeConfiguration<CatalogCategory>
-    {
-        public void Configure(EntityTypeBuilder<CatalogCategory> builder)
-        {
-            // ここに制約をすべて書く
-            builder.ToTable("catalog_categories");
-            builder.HasKey(e => e.Id);
-
-            builder.HasIndex(e => e.Code).IsUnique();
-        }
-    }
-
     public abstract class CatalogItemBaseConfiguration<TEntity>
     where TEntity : CatalogItemBase
     {
         public virtual void Configure(EntityTypeBuilder<TEntity> builder)
         {
-            builder.HasKey(e => e.Id);
+            builder.HasKey(e => e.Uuid);
 
             // 1. インデックス設定 (監査・検索の高速化)
-            builder.HasIndex(e => e.CatalogUuid);
+            builder.HasIndex(e => e.Uuid);
             builder.HasIndex(e => e.IsCurrentVersion);
             builder.HasIndex(e => e.Status);
 
-            // 2. 文字列制約 (Fluent APIで上書き・明示)
-            builder.Property(e => e.CatalogUuid)
-                // Insert後はこの値を無視（または例外をスロー）するように設定
-                .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+            // 2. プロパティ制約
             builder.Property(e => e.DisplayName)
                 .IsRequired()
                 .HasMaxLength(120);
@@ -126,8 +98,10 @@ namespace MyApi.Models
             builder.Property(e => e.Description)
                 .HasMaxLength(1000); // 任意ですが、DB保護のため上限を推奨
 
-            builder.Property(e => e.ItemImageUrl)
-                .HasMaxLength(2048); // URLの標準的な最大長
+            builder.HasOne(e => e.IconAsset)
+                .WithMany()
+                .HasForeignKey(e => e.IconAssetId)
+                .OnDelete(DeleteBehavior.SetNull); // アイコンが削除されたら参照をnullにする
 
             // 3. Enumの文字列保存 (監査ログとしての可読性を重視)
             // 数値(int)だとDBを直接見た時に意味が不明なため、文字列保存を推奨
@@ -156,23 +130,7 @@ namespace MyApi.Models
                 .ValueGeneratedOnAddOrUpdate(); // 更新時に自動計算 (PostgreSQLはTriggerが必要)
         }
     }
-    public class CatalogConfiguration : IEntityTypeConfiguration<Catalog>
-    {
-        public void Configure(EntityTypeBuilder<Catalog> builder)
-        {
-            builder.ToTable("catalogs");
-            builder.HasKey(e => e.Id);
-            builder.HasIndex(e => new { e.SeriesId, e.Number }).IsUnique();
-            builder.HasIndex(e => e.Uuid)
-                           .IsUnique() // 重複をDBレベルで防ぐ
-                           .HasDatabaseName("UQ_Catalog_Uuid"); // 名前を付けておくと管理しやすい
 
-            builder.HasOne(e => e.Series)
-                   .WithMany()
-                   .HasForeignKey(e => e.SeriesId)
-                   .OnDelete(DeleteBehavior.Restrict);
-        }
-    }
     public enum ItemStatus
     {
         DRAFT,
@@ -217,7 +175,7 @@ namespace MyApi.Models
     /// <summary>
     /// 効果を持つエンティティのインターフェース。CustomDataを定義する。これを実装することで、アイテムの効果やパラメータを柔軟に管理できる。
     /// </summary>
-    interface IHasEffect
+    interface IHasCustomData
     {
         string? CustomData { get; set; }
     }
@@ -227,5 +185,9 @@ namespace MyApi.Models
     interface IHasRequirement
     {
         string? Requirement { get; set; }
+    }
+    public interface IHasUuid
+    {
+        Guid Uuid { get; }
     }
 }

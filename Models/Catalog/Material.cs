@@ -29,12 +29,12 @@ namespace MyApi.Models
             // --- 制約 (Constraints) ---
 
             // 1. カタログUUID + リビジョンのユニーク制約
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision })
+            builder.HasIndex(e => new { e.Uuid, e.Revision })
                    .IsUnique()
                    .HasDatabaseName("UQ_VC_Catalog_Revision");
 
             // 2. 現在のバージョンはカタログごとに1つ（Partial Index）
-            builder.HasIndex(e => e.CatalogUuid)
+            builder.HasIndex(e => e.Uuid)
                    .IsUnique()
                    .HasFilter("\"IsCurrentVersion\" = TRUE")
                    .HasDatabaseName("UQ_VC_CurrentVersion");

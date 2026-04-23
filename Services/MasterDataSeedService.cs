@@ -14,7 +14,7 @@ public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataC
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
 
-        // IMasterData実装クラスを全部自動スキャン
+        // IEntity実装クラスを全部自動スキャン
         var masterTypes = typeof(IEntity).Assembly
             .GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && typeof(IEntity).IsAssignableFrom(t));

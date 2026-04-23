@@ -110,7 +110,7 @@ namespace MyApi.Models
         public bool IsEnabled { get; set; } = true;
     }
     /// <summary>
-    /// 
+    /// Dag上の繋がりを表す
     /// </summary>
     public class DagEdge : IEntity
     {

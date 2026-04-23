@@ -15,7 +15,7 @@ namespace MyApi.Models
         public int Cost { get; set; }              // 命名規則をPascalCaseに統一
     }
 
-    public class Skill : IEntity, IHasEffect
+    public class Skill : IEntity, IHasCustomData
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

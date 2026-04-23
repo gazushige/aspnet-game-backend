@@ -47,8 +47,8 @@ namespace MyApi.Models
 
         public int LotteryId { get; set; }
         public Lottery Lottery { get; set; } = null!;
-        public int PrizeCatalogId { get; set; }
-        public Catalog PrizeCatalog { get; set; } = null!;
+        public Guid PrizeCatalogId { get; set; }
+        public CatalogCategory PrizeCategory { get; set; } = CatalogCategory.CHARACTER; // 景品のカテゴリも保持しておく（クエリの効率化のため）
         public ItemRarity Rarity { get; set; } = ItemRarity.COMMON;
         public int Weight { get; set; } = 1;
         public bool IsPickup { get; set; } = false;
@@ -116,10 +116,12 @@ namespace MyApi.Models
                    .OnDelete(DeleteBehavior.Cascade);
 
             // 景品（Catalog本体）とのリレーション
-            builder.HasOne(e => e.PrizeCatalog)
-                   .WithMany()
-                   .HasForeignKey(e => e.PrizeCatalogId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(e => e.PrizeCatalogId)
+                   .IsRequired();
+            builder.Property(e => e.PrizeCategory)
+               .IsRequired()
+               .HasConversion<string>()
+               .HasMaxLength(32);
 
             builder.Property(e => e.Rarity)
                    .HasConversion<string>()

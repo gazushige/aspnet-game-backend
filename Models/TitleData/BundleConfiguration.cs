@@ -18,20 +18,13 @@ namespace MyApi.Models
                 .IsRequired()
                 .HasDefaultValue(1);
 
-            builder.Property(x => x.ItemType)
+            builder.Property(x => x.Category)
                 .IsRequired()
                 .HasConversion<string>()    // DB上はstringで保存
                 .HasMaxLength(32);
 
-            // BundledItem → Catalog  (多対1)
-            // BundledItemが消えてもCatalogは残る
-            builder.HasOne(x => x.Catalog)
-                .WithMany()
-                .HasForeignKey(x => x.CatalogId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // DiscriminatorでどのRewardDefinitionに属するか区別
-            // （RewardDefinitionConfiguration側でHasManyを定義する）
+            builder.Property(x => x.CatalogId)
+                .IsRequired();
         }
     }
 

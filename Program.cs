@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.AspNetCore.SignalR;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -124,7 +123,13 @@ builder.Services.AddHostedService<MigrationService>();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(); // .NET 9 標準の OpenAPI 登録
 
-builder.Services.AddSignalR();  // SignalRの登録
+builder.Services.AddSignalR(options =>
+{
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);   // サーバーからpingを送る間隔
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30); // これ以上無応答なら切断
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+});
+builder.Services.AddHostedService<ConnectionWatchdogService>(); //SgnalRのゾンビ接続を定期的に切断
 
 builder.Services.AddAuthentication(); // 認証サービスの追加（必要に応じて設定）
 builder.Services.AddAuthorization();  // 認可サービスの追加（必要に応じて設定）
@@ -181,6 +186,7 @@ app.UseSerilogRequestLogging(options =>
         }
     };
 });
+app.UseRouting();
 
 app.UseStaticFiles(); // ★ここに移動！認証や制限の前に静的ファイルを返す
 
@@ -262,7 +268,7 @@ app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/playfab"), branch =>
     branch.UseRateLimiter();
     branch.UseMiddleware<ServerStatusMiddleware>();
 });
-app.UseRouting();                    // ① ルーティング
+// ① ルーティング
 
 app.UseWhen(                         // ② 分岐ミドルウェア
     ctx => ctx.Request.Path.StartsWithSegments("/chat"),

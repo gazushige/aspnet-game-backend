@@ -10,19 +10,15 @@ namespace MyApi.Models
        {
               public int Id { get; set; }
               public string Name { get; set; } = string.Empty;
-              public string? Label { get; set; }
-              public string Path { get; set; } = string.Empty;
-              public string? PublicUrl { get; set; }
-
+              public string Label { get; set; } = string.Empty;       // Addressablesのラベル。複数のアセットを同じラベルでグループ化できる。例: "character_prefabs", "ui_sprites" など
+              public string Path { get; set; } = string.Empty;        // Addressablesのアセットパス (例: "Assets/Prefabs/Characters/Hero.prefab") Unity側での一意識別子として使用
+              public Uri? PublicUrl { get; set; }                     // S3などのCDN配信URL       
               public DateTimeOffset CreatedAt { get; set; }
               public DateTimeOffset UpdatedAt { get; set; }
 
               // AssetVersion との多対多リレーションシップ
               // Django の assets.ManyToManyField 相当
               public ICollection<AssetVersion> Versions { get; set; } = new List<AssetVersion>();
-
-              // Django の __str__ 相当（ただしここでは Version への参照が必要）
-              public override string ToString() => $"{Name} ({Path})";
        }
        public class AddressableAssetConfiguration : IEntityTypeConfiguration<AddressableAsset>
        {
@@ -49,7 +45,11 @@ namespace MyApi.Models
 
                      // S3などのCDN配信URL
                      builder.Property(e => e.PublicUrl)
-                            .HasMaxLength(2048); // URLの標準的な最大長
+                            .HasConversion(
+                                v => v == null ? null : v.ToString(),
+                                v => string.IsNullOrEmpty(v) ? null : new Uri(v)
+                            )
+                            .HasMaxLength(2048);
 
                      // 4. タイムスタンプ
                      builder.Property(e => e.CreatedAt)

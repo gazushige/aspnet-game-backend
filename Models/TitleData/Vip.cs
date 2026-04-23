@@ -8,7 +8,7 @@ namespace MyApi.Models
     /// <summary>
     /// VIP効果のマスターデータ
     /// </summary>
-    public class VipMaster : IEntity, IHasEffect, IHasRequirement
+    public class VipMaster : IEntity, IHasCustomData, IHasRequirement
     {
         public int Id { get; set; }
 

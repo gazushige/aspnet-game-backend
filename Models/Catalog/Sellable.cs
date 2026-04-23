@@ -8,7 +8,7 @@ namespace MyApi.Models
     /// </summary>
     public abstract class SellableCatalogItem : CatalogItemBase
     {
-        public bool IsStackable { get; set; }
+        public virtual bool IsStackable { get; }
         public bool IsTradable { get; set; }
 
         public bool IsLimitedEdition { get; set; } = false;
@@ -23,7 +23,6 @@ namespace MyApi.Models
             base.Configure(builder);
 
             // 数値・フラグ系のデフォルト値設定
-            builder.Property(e => e.IsStackable).HasDefaultValue(false);
             builder.Property(e => e.IsTradable).HasDefaultValue(false);
             builder.Property(e => e.IsLimitedEdition).HasDefaultValue(false);
             builder.Property(e => e.InitialLimitedEditionCount).HasDefaultValue(0);

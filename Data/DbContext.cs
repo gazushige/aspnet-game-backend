@@ -27,9 +27,7 @@ namespace MyApi.Models
     public abstract partial class BaseDbContext(DbContextOptions options) : DbContext(options)
     {
         // 各エンティティの登録
-        public DbSet<CatalogCategory> Categories => Set<CatalogCategory>();
-        public DbSet<CatalogSeries> Series => Set<CatalogSeries>();
-        public DbSet<Catalog> Catalogs => Set<Catalog>();
+        public DbSet<CatalogPrefix> Prefix => Set<CatalogPrefix>();
         public DbSet<ConsumableItem> ConsumableItems => Set<ConsumableItem>();
         public DbSet<EquipmentItem> EquipmentItems => Set<EquipmentItem>();
         public DbSet<Player> Players => Set<Player>();
@@ -68,19 +66,10 @@ namespace MyApi.Models
 
             var dataProperty = modelBuilder.Entity<EligibilityCondition>().Property(e => e.Data);
 
-            if (Database.IsNpgsql()) // PostgreSQLの場合
-            {
-                dataProperty
-                    .HasColumnType("jsonb")
-                    .HasDefaultValueSql("'{}'::jsonb");
-            }
-            else // SQLiteなどの場合
-            {
-                // SQLiteはJSONを単なる文字列(TEXT)として扱う
-                dataProperty
-                    .HasColumnType("TEXT")
-                    .HasDefaultValueSql("'{}'"); // キャスト(::jsonb)を消す
-            }
+            dataProperty
+                .HasColumnType("jsonb")
+                .HasDefaultValueSql("'{}'::jsonb");
+
         }
     }
 }

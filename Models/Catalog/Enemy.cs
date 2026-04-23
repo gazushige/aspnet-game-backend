@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// 敵キャラクターを表す（マスターデータ）
     /// </summary>
-    public class Enemy : CatalogItemBase, IHasEffect
+    public class Enemy : CatalogItemBase, IHasCustomData
     {
         // 敵固有のパラメータ（HP, ATKなど）を JSONB で保持
         // 頻繁に検索対象になる項目（Levelなど）があれば、プロパティとして切り出すのが吉
@@ -42,13 +42,13 @@ namespace MyApi.Models
             // 5. インデックスとユニーク制約 (Django Meta 相当)
 
             // UQ: カタログUUIDとリビジョンの一意性
-            builder.HasIndex(e => new { e.CatalogUuid, e.Revision })
+            builder.HasIndex(e => new { e.Uuid, e.Revision })
                    .IsUnique()
                    .HasDatabaseName("UQ_Enemy_Catalog_Revision");
 
             // Partial Index: 現在有効なバージョンはカタログごとに1つだけ
             // Django の condition=models.Q(is_current_version=True) 相当
-            builder.HasIndex(e => e.CatalogUuid)
+            builder.HasIndex(e => e.Uuid)
                    .IsUnique()
                    .HasFilter("\"IsCurrentVersion\" = TRUE")
                    .HasDatabaseName("UQ_Enemy_CurrentVersion");
