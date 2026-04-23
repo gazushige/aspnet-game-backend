@@ -28,3 +28,5 @@ Thumbs.db
 appsettings.json
 
 firebase_credentials.json
+
+wwwroot/

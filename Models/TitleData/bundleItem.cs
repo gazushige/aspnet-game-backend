@@ -136,4 +136,13 @@ namespace MyApi.Models
         public int RequiredProgress { get; set; }
         public ICollection<BundledItem> BundledItems { get; set; } = new List<BundledItem>();
     }
+
+    /// <summary>
+    /// 配布アイテム定義。
+    /// 例: イベント報酬やギフトなど、ユーザーにアイテ
+    /// </summary> 
+    public class DistributedItems : RewardDefinition, IHasEligibility
+    {
+        public EligibilityCondition? EligibilityCondition { get; set; }
+    }
 }

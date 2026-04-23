@@ -216,4 +216,16 @@ namespace MyApi.Models
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
+    public class DistributedItemsConfiguration : IEntityTypeConfiguration<DistributedItems>
+    {
+        public void Configure(EntityTypeBuilder<DistributedItems> builder)
+        {
+            // DistributedItems → EligibilityCondition (0..1 対 1)
+            builder.HasOne(x => x.EligibilityCondition)
+                .WithOne()
+                .HasForeignKey<DistributedItems>("EligibilityConditionId")   // Shadow FK
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
 }
