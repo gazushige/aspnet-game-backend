@@ -99,10 +99,7 @@ namespace rest.Migrations.AdminDb
                 name: "CatalogId",
                 table: "bundled_items",
                 type: "uuid",
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(50)",
-                oldMaxLength: 50);
+                nullable: false);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Label",
@@ -370,14 +367,14 @@ namespace rest.Migrations.AdminDb
                 maxLength: 2048,
                 nullable: true);
 
-            migrationBuilder.AlterColumn<string>(
-                name: "CatalogId",
-                table: "bundled_items",
-                type: "character varying(50)",
-                maxLength: 50,
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
+            // migrationBuilder.AlterColumn<string>(
+            //     name: "CatalogId",
+            //     table: "bundled_items",
+            //     type: "character varying(50)",
+            //     maxLength: 50,
+            //     nullable: false,
+            //     oldClrType: typeof(Guid),
+            //     oldType: "uuid");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Label",

@@ -370,9 +370,7 @@ namespace rest.Migrations.AdminDb
                 name: "PrizeCatalogId",
                 table: "LotteryPrizes",
                 type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
+                nullable: false);
 
             migrationBuilder.AlterColumn<int>(
                 name: "Id",
