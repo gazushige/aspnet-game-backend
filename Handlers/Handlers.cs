@@ -4,9 +4,11 @@ using MyApi.Models;
 
 namespace MyApi.Handlers
 {
+    // サービスのDI登録を一括で行うためのインターフェース
     public interface IRpcService { }
     public sealed class NoParams { }
 
+    // RPCハンドラーのDI登録と呼び出しを統一的に扱うためのインターフェースとベースクラス
     public interface IRpcHandler<TRequest, TResponse>
     {
         string Method { get; }
