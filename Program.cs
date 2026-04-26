@@ -8,6 +8,7 @@ using Serilog.Events;
 using Serilog.Templates;
 using System.Threading.RateLimiting;
 using MyApi.Models;
+using MyApi.Handlers;
 using rest.Components;
 using Google.Cloud.Firestore;
 using OpenTelemetry.Metrics;
@@ -18,6 +19,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using System.Text.Json;
+using System.Reflection;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -108,6 +110,27 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHttpForwarder(); // Forwarderを登録
 
 builder.Host.UseSerilog();
+
+// アセンブリ内のIRpcHandler実装を全て自動登録
+var handlerTypes = Assembly.GetExecutingAssembly()
+    .GetTypes()
+    .Where(t => !t.IsAbstract && t.GetInterfaces()
+        .Any(i => i.IsGenericType &&
+                  i.GetGenericTypeDefinition() == typeof(IRpcHandler<,>)));
+
+foreach (var type in handlerTypes)
+    builder.Services.AddScoped(type);
+
+// アセンブリ内のIRpcService実装を全て自動登録
+var rpcServiceTypes = Assembly.GetExecutingAssembly()
+    .GetTypes()
+    .Where(t => !t.IsAbstract && typeof(IRpcService).IsAssignableFrom(t));
+
+foreach (var type in rpcServiceTypes)
+    builder.Services.AddScoped(type);
+
+builder.Services.AddScoped<RpcDispatcher>();
+
 
 // --- DbContextの登録 ---
 builder.Services

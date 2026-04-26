@@ -2,17 +2,16 @@ using System.Security.Claims;
 using System.Text.Json;
 using MyApi.Models;
 
-
 namespace MyApi.Handlers
 {
-    // 引数なしのメソッド用のマーカー型（Sharedに置いてもOK）
+    public interface IRpcService { }
     public sealed class NoParams { }
 
     public interface IRpcHandler<TRequest, TResponse>
     {
         string Method { get; }
         Task<JsonElement> HandleAsync(
-            JsonElement? request,   // ← nullableに変更
+            JsonElement? request,
             ClaimsPrincipal user,
             ApiDbContext db,
             IConfiguration config);
@@ -21,6 +20,15 @@ namespace MyApi.Handlers
     public abstract class BaseRpcHandler<TRequest, TResponse>
         : IRpcHandler<TRequest, TResponse>
     {
+        // 起動時に1回だけ評価されるのでActivatorのコストはゼロ
+        private static readonly bool _isNoParams = typeof(TRequest) == typeof(NoParams);
+
+        private static readonly JsonSerializerOptions _options = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+
         public abstract string Method { get; }
 
         public abstract Task<TResponse> ExecuteAsync(
@@ -35,69 +43,68 @@ namespace MyApi.Handlers
             ApiDbContext db,
             IConfiguration config)
         {
-            var req = JsonSerializer.Deserialize<TRequest>(request?.ToString() ?? string.Empty, _options)
-       ?? throw new RpcException(-32602, "Invalid params");
+            // DeserializeOrDefaultを通す（空文字・null対応はここで完結）
+            var req = DeserializeOrDefault(request);
 
             var response = await ExecuteAsync(req, user, db, config);
 
-            var json = JsonSerializer.Serialize(response, _options);  // ← オプション渡す
-            return JsonDocument.Parse(json).RootElement;
+            // JsonElementへの変換はSerialize→Parseの一方通行で統一
+            using var doc = JsonDocument.Parse(JsonSerializer.Serialize(response, _options));
+            return doc.RootElement.Clone(); // usingスコープを抜けても安全なようにClone
         }
 
-        // null・空・Null値・NoParamsを一括処理
         private static TRequest DeserializeOrDefault(JsonElement? element)
         {
-            // TRequest が NoParams なら即返す
-            if (typeof(TRequest) == typeof(NoParams))
+            // NoParamsは即返す（リフレクション不要）
+            if (_isNoParams)
                 return (TRequest)(object)new NoParams();
 
-            // null または JSON null または 空Object・空Array
+            // null・Undefined・JSONのnull・空文字列は全てデフォルト扱い
             if (element is null
                 || element.Value.ValueKind == JsonValueKind.Null
-                || element.Value.ValueKind == JsonValueKind.Undefined)
+                || element.Value.ValueKind == JsonValueKind.Undefined
+                || (element.Value.ValueKind == JsonValueKind.String
+                    && string.IsNullOrEmpty(element.Value.GetString())))
             {
-                // TRequestがnull許容ならnull、そうでなければデフォルトコンストラクタ
                 return TryCreateDefault()
                     ?? throw new RpcException(-32602, "Invalid params: params is required");
             }
 
-            return JsonSerializer.Deserialize<TRequest>(element.Value)
+            // 文字列として来た場合（二重エンコード）は中身を再パース
+            if (element.Value.ValueKind == JsonValueKind.String)
+            {
+                var str = element.Value.GetString()!;
+                return JsonSerializer.Deserialize<TRequest>(str, _options)
+                    ?? throw new RpcException(-32602, "Invalid params: deserialization failed");
+            }
+
+            // 通常のオブジェクト・配列
+            return JsonSerializer.Deserialize<TRequest>(element.Value, _options)
                 ?? throw new RpcException(-32602, "Invalid params: deserialization failed");
         }
 
-        // デフォルトインスタンスを試みる（引数なしコンストラクタがあれば生成）
         private static TRequest? TryCreateDefault()
         {
-            try
-            {
-                return Activator.CreateInstance<TRequest>();
-            }
-            catch
-            {
-                return default;
-            }
+            try { return Activator.CreateInstance<TRequest>(); }
+            catch { return default; }
         }
-        private static readonly JsonSerializerOptions _options = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true
-        };
     }
 
     public class JsonRpcEnvelope
     {
         public string Jsonrpc { get; set; } = "2.0";
         public string Method { get; set; } = string.Empty;
-        public JsonElement Params { get; set; }
+        public JsonElement? Params { get; set; }  // nullableに統一
         public string? Id { get; set; }
     }
+
     public class JsonRpcResponseEnvelope
     {
         public string Jsonrpc { get; set; } = "2.0";
         public JsonElement Result { get; set; }
-
         public string? Id { get; set; }
     }
+
     public class RpcException : Exception
     {
         public int Code { get; }
@@ -105,5 +112,17 @@ namespace MyApi.Handlers
         {
             Code = code;
         }
+    }
+    public class JsonRpcErrorEnvelope
+    {
+        public string Jsonrpc { get; set; } = "2.0";
+        public JsonRpcError Error { get; set; } = new();
+        public string? Id { get; set; }
+    }
+
+    public class JsonRpcError
+    {
+        public int Code { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }

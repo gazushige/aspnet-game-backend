@@ -9,7 +9,7 @@ namespace MyApi.RpcServices
     {
         Task<TResponse> ExecuteAsync(TRequest request, ClaimsPrincipal user);
     }
-    public class GachaService : IRpcService<GachaRequest, GachaResponse>
+    public class GachaService : IRpcService<GachaRequest, GachaResponse>, IRpcService
     {
         public async Task<GachaResponse> ExecuteAsync(GachaRequest request, ClaimsPrincipal user)
         {
