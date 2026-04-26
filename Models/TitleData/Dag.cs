@@ -3,7 +3,7 @@ namespace MyApi.Models
     /// <summary>
     /// DAG(有向非巡回グラフ)を表すクラス
     /// </summary>
-    public abstract class Dag : IEntity
+    public abstract class Dag : ICacheableEntity
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ namespace MyApi.Models
         public IEnumerable<DagNode> RootNodes => Nodes.Where(n => n.IsRoot);
     }
 
-    public abstract class DagNode : IEntity
+    public abstract class DagNode : ICacheableEntity
     {
         public int Id { get; set; }
 
@@ -97,7 +97,7 @@ namespace MyApi.Models
     /// DAGとノードの所属関係を表す中間テーブル。
     /// ツリー固有のメタ情報（表示順など）もここに持たせられる。
     /// </summary>
-    public class DagMembership : IEntity
+    public class DagMembership : ICacheableEntity
     {
         public int Id { get; set; }
         public int DagId { get; set; }
@@ -112,7 +112,7 @@ namespace MyApi.Models
     /// <summary>
     /// Dag上の繋がりを表す
     /// </summary>
-    public class DagEdge : IEntity
+    public class DagEdge : ICacheableEntity
     {
         public int Id { get; set; }
         public int ParentId { get; set; }

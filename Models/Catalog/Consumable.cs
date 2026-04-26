@@ -38,8 +38,8 @@ namespace MyApi.Models
                    .HasConversion<string>() // 監査ログ用に文字列保存を推奨
                    .HasMaxLength(20);
 
-            builder.Property(e => e.CustomData)
-                   .HasColumnType("jsonb");
+            builder.Property(e => e.CustomData);
+            //    .HasColumnType("jsonb");
 
             // 4. 制約 (Django の Meta constraints 相当)
 

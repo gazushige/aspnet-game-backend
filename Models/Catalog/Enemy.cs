@@ -29,8 +29,8 @@ namespace MyApi.Models
             builder.ToTable("enemies");
 
             // 3. プロパティ設定
-            builder.Property(e => e.CustomData)
-                   .HasColumnType("jsonb");
+            builder.Property(e => e.CustomData);
+            //    .HasColumnType("jsonb");
 
             // 4. リレーションシップ (Django の PROTECT 相当)
             // ドロップテーブルが削除される際、それを使用している敵がいればエラーにする

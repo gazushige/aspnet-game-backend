@@ -25,7 +25,7 @@ appsettings.Development.json
 .DS_Store
 Thumbs.db
 .env
-appsettings.json
+appsettings*.json
 
 firebase_credentials.json
 

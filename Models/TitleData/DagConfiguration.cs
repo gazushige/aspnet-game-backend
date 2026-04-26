@@ -153,8 +153,8 @@ namespace MyApi.Configurations
             builder.Property(s => s.Description)
                 .HasMaxLength(500);
 
-            builder.Property(s => s.CustomData)
-                .HasColumnType("jsonb"); // PostgreSQL jsonb型
+            builder.Property(s => s.CustomData);
+            // .HasColumnType("jsonb"); // PostgreSQL jsonb型
         }
     }
 }

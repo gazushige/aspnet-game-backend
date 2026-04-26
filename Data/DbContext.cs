@@ -45,6 +45,7 @@ namespace MyApi.Models
         public DbSet<CatalogVersion> CatalogVersions => Set<CatalogVersion>();
         public DbSet<AddressableAsset> AddressableAssets => Set<AddressableAsset>();
         public DbSet<UpdateVersion> UpdateVersions => Set<UpdateVersion>();
+        public DbSet<ServerVersion> ServerVersions => Set<ServerVersion>();
         public DbSet<SkillTree> SkillTrees => Set<SkillTree>();
         public DbSet<SkillNode> SkillNodes => Set<SkillNode>();
         public DbSet<Skill> Skills => Set<Skill>();
@@ -63,13 +64,6 @@ namespace MyApi.Models
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(BaseDbContext).Assembly);
-
-            var dataProperty = modelBuilder.Entity<EligibilityCondition>().Property(e => e.Data);
-
-            dataProperty
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
-
         }
     }
 }

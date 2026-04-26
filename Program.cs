@@ -15,6 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using System.Text.Json;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -106,23 +109,43 @@ builder.Services.AddHttpForwarder(); // Forwarderを登録
 
 builder.Host.UseSerilog();
 
+// --- DbContextの登録 ---
 builder.Services
-    .AddSingleton<TimestampInterceptor>()
     .AddDbContext<AdminDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("AdminContext")))
+        options.UseSqlite(builder.Configuration.GetConnectionString("AdminContext")))
     .AddDbContext<ApiDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("ApiContext"))
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-            .ReplaceService<IMigrator, DisabledMigrator>()) // ✅ Migratorを無効化
+        options.UseSqlite(builder.Configuration.GetConnectionString("ApiContext"))
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking))
     .AddDbContext<StaffDbContext>((sp, options) =>
-        options.AddInterceptors(sp.GetRequiredService<TimestampInterceptor>())
-            .UseNpgsql(builder.Configuration.GetConnectionString("StaffContext"))
-            .ReplaceService<IMigrator, DisabledMigrator>()); // ✅ Migratorを無効化
-builder.Services.AddHostedService<MigrationService>();
+        options.UseSqlite(builder.Configuration.GetConnectionString("StaffContext")));
 
-builder.Services.AddControllers();
+//本番環境では/adminと/staffのコントローラーを登録しない（セキュリティ強化のため）  
+builder.Services.AddControllers()
+    .ConfigureApplicationPartManager(manager =>
+    {
+        if (!builder.Environment.IsDevelopment())
+        {
+            var controllersToRemove = manager.ApplicationParts
+                .OfType<AssemblyPart>()
+                .First()
+                .Types
+                .Where(t => t.Name.Contains("Admin") || t.Name.Contains("Staff"))
+                .ToList();
+
+            foreach (var type in controllersToRemove)
+            {
+                manager.FeatureProviders.Add(new RemoveControllerFeatureProvider(type));
+            }
+        }
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
 builder.Services.AddOpenApi(); // .NET 9 標準の OpenAPI 登録
 
+// --- SignalRの登録 ---
 builder.Services.AddSignalR(options =>
 {
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);   // サーバーからpingを送る間隔
@@ -131,8 +154,10 @@ builder.Services.AddSignalR(options =>
 });
 builder.Services.AddHostedService<ConnectionWatchdogService>(); //SgnalRのゾンビ接続を定期的に切断
 
+// --- 認証・認可の登録 ---
 builder.Services.AddAuthentication(); // 認証サービスの追加（必要に応じて設定）
 builder.Services.AddAuthorization();  // 認可サービスの追加（必要に応じて設定）
+
 // PlayFab認証サービスの追加
 builder.Services.AddHttpClient<PlayFabAuthService>();
 builder.Services.AddSingleton<PlayFabAuthService>();
@@ -250,12 +275,12 @@ app.MapPost("/admin/logout-handler", async (HttpContext httpContext) =>
 
 
 // --- 分岐 ---
-app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/api"), api =>
-{
-    api.UseRateLimiter();
-    api.UseMiddleware<ServerStatusMiddleware>();
-    api.UseMiddleware<PlayFabAuthMiddleware>();
-});
+// app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/rpc"), api =>
+// {
+//     api.UseRateLimiter();
+//     api.UseMiddleware<ServerStatusMiddleware>();
+//     api.UseMiddleware<PlayFabAuthMiddleware>();
+// });
 
 app.UseWhen(ctx => ctx.Request.Path.StartsWithSegments("/staff"), staff =>
 {
@@ -295,6 +320,7 @@ app.Map("/playfab/{**catch-all}", async (HttpContext context, IHttpForwarder for
 }).RequireRateLimiting("GameLimit");
 
 app.MapControllers();
+
 app.MapHub<ChatHub>("/chat");  // SignalRの端点 (例: /chat)
 app.Run();
 
@@ -364,4 +390,24 @@ public class DisabledMigrator : IMigrator
     // 未適用のマイグレーションがあるか確認するメソッドだが
     // このContextではマイグレーション自体禁止なので常にfalseを返す
     public bool HasPendingModelChanges() => false;
+}
+
+// 特定のコントローラーを削除するFeatureProvider
+public class RemoveControllerFeatureProvider : IApplicationFeatureProvider<ControllerFeature>
+{
+    private readonly Type _typeToRemove;
+
+    public RemoveControllerFeatureProvider(Type typeToRemove)
+    {
+        _typeToRemove = typeToRemove;
+    }
+
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+    {
+        var controller = feature.Controllers.FirstOrDefault(t => t.AsType() == _typeToRemove);
+        if (controller != null)
+        {
+            feature.Controllers.Remove(controller);
+        }
+    }
 }

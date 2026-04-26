@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Frozen;
 using MyApi.Models;
+using Polly.Caching;
 public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataCache cache,
     IServerStatusService statusService) // DIで受け取る
     : IHostedService
@@ -17,25 +18,32 @@ public class MasterDataSeedService(IServiceProvider serviceProvider, MasterDataC
         // IEntity実装クラスを全部自動スキャン
         var masterTypes = typeof(IEntity).Assembly
             .GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract && typeof(IEntity).IsAssignableFrom(t));
+            .Where(t => t.IsClass
+                && !t.IsAbstract
+                && typeof(ICacheableEntity).IsAssignableFrom(t));
 
-        foreach (var type in masterTypes)
-        {
-            await (Task)typeof(MasterDataSeedService)
-                .GetMethod(nameof(LoadAsync), BindingFlags.NonPublic | BindingFlags.Instance)!
-                .MakeGenericMethod(type)
-                .Invoke(this, [context])!;
-        }
+        var tasks = masterTypes.Select(LoadByTypeAsync);
+        await Task.WhenAll(tasks);
 
         statusService.ChangeStatus(ServerStatus.Running);
     }
+    private async Task LoadByTypeAsync(Type type)
+    {
+        using var scope = serviceProvider.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<ApiDbContext>();
 
+        await (Task)typeof(MasterDataSeedService)
+            .GetMethod(nameof(LoadAsync), BindingFlags.NonPublic | BindingFlags.Instance)!
+            .MakeGenericMethod(type)
+            .Invoke(this, [ctx])!;
+    }
     private async Task LoadAsync<T>(ApiDbContext context) where T : class, IEntity
     {
-        var dict = await context.Set<T>()
+        var list = await context.Set<T>()
                                 .AsNoTracking()
-                                .ToListAsync()
-                                .ContinueWith(t => t.Result.ToFrozenDictionary(i => i.Id));
+                                .ToListAsync();
+
+        var dict = list.ToFrozenDictionary(i => i.Id);
         cache.Register(dict);
     }
 

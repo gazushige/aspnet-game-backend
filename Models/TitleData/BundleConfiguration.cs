@@ -44,9 +44,9 @@ namespace MyApi.Models
                 .HasMaxLength(128);
 
             builder.Property(x => x.Data)
-                .IsRequired()
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .IsRequired();
+            // .HasColumnType("jsonb")
+            // .HasDefaultValueSql("'{}'::jsonb");
         }
     }
 
@@ -62,9 +62,9 @@ namespace MyApi.Models
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Criteria)
-                .IsRequired()
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .IsRequired();
+            // .HasColumnType("jsonb")
+            // .HasDefaultValueSql("'{}'::jsonb");
 
             builder.Property(x => x.TrackingMode)
                 .IsRequired()

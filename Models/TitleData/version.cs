@@ -249,7 +249,11 @@ namespace MyApi.Models
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
     }
-
+    public class ServerVersion : VersionBase
+    {
+        // 将来的にサーバー側のバージョン管理が必要になった場合に備えて、ServerVersion クラスを用意しておく。
+        // 現時点では CatalogVersion や AssetVersion と同様の構造だが、将来独自のフィールドやロジックを追加することができる。
+    }
     // -------------------------------------------------------
     // Enum
     // -------------------------------------------------------
@@ -326,7 +330,8 @@ namespace MyApi.Models
                    .IsUnique()
                    .HasDatabaseName("UQ_CatalogVersion_SemVer");
 
-            builder.Property(e => e.SnapShot).HasColumnType("jsonb");
+            builder.Property(e => e.SnapShot);
+            // .HasColumnType("jsonb");
         }
     }
 

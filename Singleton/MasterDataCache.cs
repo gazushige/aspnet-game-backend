@@ -1,4 +1,5 @@
 // MasterDataCache.cs
+//Singletonパターンでマスターデータをキャッシュするクラス
 using System.Collections.Frozen;
 
 public class MasterDataCache

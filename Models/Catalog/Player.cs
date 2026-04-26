@@ -47,7 +47,8 @@ namespace MyApi.Models
             builder.ToTable("exp_tables");
             builder.HasKey(e => e.Id);
 
-            builder.Property(e => e.Logic).HasColumnType("jsonb");
+            builder.Property(e => e.Logic);
+            //.HasColumnType("jsonb");
             builder.Property(e => e.MinLevel).HasDefaultValue(1);
             builder.Property(e => e.MaxLevel).HasDefaultValue(99);
         }
@@ -82,7 +83,8 @@ namespace MyApi.Models
                    .HasFilter("\"IsCurrentVersion\" = TRUE")
                    .HasDatabaseName("UQ_Player_CurrentVersion");
 
-            builder.Property(e => e.CustomData).HasColumnType("jsonb");
+            builder.Property(e => e.CustomData);
+            //    .HasColumnType("jsonb");
         }
     }
 }

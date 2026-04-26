@@ -110,8 +110,8 @@ namespace MyApi.Models
                 .IsRequired();
 
             builder.Property(x => x.Requirement)
-                .HasColumnName("requirement")
-                .HasColumnType("jsonb");
+                .HasColumnName("requirement");
+            // .HasColumnType("jsonb");
 
             builder.Property(x => x.UnlockAfter)
                 .HasColumnName("unlock_after");
@@ -120,8 +120,8 @@ namespace MyApi.Models
                 .HasColumnName("force_progress_at");
 
             builder.Property(x => x.CustomData)
-                .HasColumnName("custom_data")
-                .HasColumnType("jsonb");
+                .HasColumnName("custom_data");
+            // .HasColumnType("jsonb");
 
             builder.Property(x => x.BannerAssetId)
                 .HasColumnName("banner_asset_id");

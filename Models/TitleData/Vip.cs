@@ -96,12 +96,12 @@ namespace MyApi.Models
 
             // ── JSON ──────────────────────────────────────────
             builder.Property(x => x.Requirement)
-                .HasColumnName("requirement")
-                .HasColumnType("jsonb");
+                .HasColumnName("requirement");
+            // .HasColumnType("jsonb");
 
             builder.Property(x => x.CustomData)
-                .HasColumnName("custom_data")
-                .HasColumnType("jsonb");
+                .HasColumnName("custom_data");
+            // .HasColumnType("jsonb");
 
             // ── インデックス ──────────────────────────────────
             builder.HasIndex(x => x.Level)

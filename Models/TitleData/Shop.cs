@@ -3,7 +3,7 @@ namespace MyApi.Models
     /// <summary>
     /// ショップのマスター定義
     /// </summary>
-    public class Shop : IEntity, IHasExpiry
+    public class Shop : ICacheableEntity, IHasExpiry
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty; // 武器屋、期間限定交換所など
@@ -23,7 +23,7 @@ namespace MyApi.Models
         public ICollection<ShopItem> Items { get; set; } = new List<ShopItem>();
     }
 
-    public class ShopItem : IEntity
+    public class ShopItem : ICacheableEntity
     {
         public int Id { get; set; }
 

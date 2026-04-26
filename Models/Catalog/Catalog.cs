@@ -35,7 +35,7 @@ namespace MyApi.Models
     /// <summary>
     /// カタログアイテムの基本クラス。シリーズごとにアイテムの内容は異なるが、共通の属性をここで定義する。シリーズごとに個別のテーブルを作る場合は、これを継承して具体的なアイテムクラスを作成する。
     /// </summary>
-    public abstract class CatalogItemBase : IHasTimestamps, IEntity, IHasUuid
+    public abstract class CatalogItemBase : IHasTimestamps, ICacheableEntity, IHasUuid
     {
         public int Id { get; set; }
         [Key]
@@ -112,8 +112,8 @@ namespace MyApi.Models
 
             // 4. JSONB設定 (PostgreSQL専用)
             // Native AOTでは JsonDocument のシリアライズに Source Generator が必要
-            builder.Property(e => e.Tags)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.Tags);
+            // .HasColumnType("jsonb");
 
             // 5. バージョニング (リビジョン管理)
             builder.Property(e => e.Revision)
@@ -155,6 +155,12 @@ namespace MyApi.Models
     public interface IEntity
     {
         int Id { get; }
+    }
+    public interface ICacheableEntity : IEntity
+    {
+        // キャッシュ対象であることを示すマーカーインターフェース。これを実装したクラスだけをMasterDataCacheに登録する。
+        // 例えば、頻繁にアクセスされるが更新は少ないマスターデータクラスがこれを実装する。
+        // これにより、キャッシュの対象と非対象を明確に分けることができる。
     }
     /// <summary>
     /// タイムスタンプを持つエンティティのインターフェース。CreatedAtとUpdatedAtを定義する。これを実装することで、アイテムの作成日時と更新日時を管理できる。

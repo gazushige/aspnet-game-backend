@@ -23,7 +23,8 @@ namespace MyApi.Models
             builder.HasKey(a => a.Id);
             builder.Property(a => a.Title).HasMaxLength(200);
             builder.Property(a => a.Message).HasMaxLength(2000);
-            builder.Property(a => a.Requirement).HasColumnType("jsonb");
+            builder.Property(a => a.Requirement);
+            //.HasColumnType("jsonb");
         }
     }
 }

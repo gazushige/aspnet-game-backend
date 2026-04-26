@@ -22,8 +22,10 @@ namespace MyApi.Models
         {
             base.Configure(builder);
             builder.ToTable("titles");
-            builder.Property(t => t.CustomData).HasColumnType("jsonb");
-            builder.Property(t => t.Requirement).HasColumnType("jsonb");
+            builder.Property(t => t.CustomData);
+            //.HasColumnType("jsonb");
+            builder.Property(t => t.Requirement);
+            //.HasColumnType("jsonb");
         }
     }
 }

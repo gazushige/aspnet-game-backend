@@ -5,33 +5,28 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyApi.Models;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace rest.Migrations.AdminDb
+namespace rest.Migrations
 {
     [DbContext(typeof(AdminDbContext))]
-    [Migration("20260417014110_initial3")]
-    partial class initial3
+    [Migration("20260424034303_Initial2")]
+    partial class Initial2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.15")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.15");
 
             modelBuilder.Entity("AssetVersionAssets", b =>
                 {
                     b.Property<int>("AssetVersionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("AddressableAssetId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("AssetVersionId", "AddressableAssetId");
 
@@ -44,20 +39,18 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("AchievementId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("RequiredProgress")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -70,36 +63,35 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Label")
+                        .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Path")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PublicUrl")
                         .HasMaxLength(2048)
-                        .HasColumnType("character varying(2048)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
@@ -114,61 +106,86 @@ namespace rest.Migrations.AdminDb
                     b.ToTable("addressable_assets", (string)null);
                 });
 
+            modelBuilder.Entity("MyApi.Models.Announcement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("ExecutedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Requirement")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("announcements", (string)null);
+                });
+
             modelBuilder.Entity("MyApi.Models.AppVersion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("BuildNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("ForceUpdate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
                     b.Property<int>("Major")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Minor")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Patch")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ReleasedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("StoreUrl")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
@@ -184,39 +201,37 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Major")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Minor")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Patch")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("ReleasedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
@@ -232,176 +247,111 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("AchievementTierId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("CatalogId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("ItemType")
+                    b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Quantity")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
                     b.Property<int?>("RewardDefinitionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AchievementTierId");
-
-                    b.HasIndex("CatalogId");
 
                     b.HasIndex("RewardDefinitionId");
 
                     b.ToTable("bundled_items", (string)null);
                 });
 
-            modelBuilder.Entity("MyApi.Models.Catalog", b =>
+            modelBuilder.Entity("MyApi.Models.CatalogPrefix", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SeriesId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("Uuid")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Uuid")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_Catalog_Uuid");
-
-                    b.HasIndex("SeriesId", "Number")
-                        .IsUnique();
-
-                    b.ToTable("catalogs", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.CatalogCategory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("catalog_categories", (string)null);
-                });
-
-            modelBuilder.Entity("MyApi.Models.CatalogSeries", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<int>("Category")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LastNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Prefix")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Category");
 
                     b.HasIndex("Prefix")
                         .IsUnique();
 
                     b.HasIndex("CategoryId", "Prefix")
                         .IsUnique()
-                        .HasDatabaseName("UQ_CatalogSeries_Category_Prefix");
+                        .HasDatabaseName("UQ_CatalogPrefix_Category_Prefix");
 
-                    b.ToTable("catalog_series", (string)null);
+                    b.ToTable("catalog_prefixes", (string)null);
                 });
 
             modelBuilder.Entity("MyApi.Models.CatalogVersion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Major")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Minor")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Patch")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("ReleasedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SnapShot")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
@@ -410,123 +360,127 @@ namespace rest.Migrations.AdminDb
                         .IsUnique()
                         .HasDatabaseName("UQ_CatalogVersion_SemVer");
 
-                    b.ToTable("catalog_versions", (string)null);
+                    b.ToTable("catalog_versions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_version_major_positive", "\"Major\" >= 0");
+
+                            t.HasCheckConstraint("CK_version_minor_positive", "\"Minor\" >= 0");
+
+                            t.HasCheckConstraint("CK_version_patch_positive", "\"Patch\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("MyApi.Models.ConsumableItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("InitialLimitedEditionCount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.Property<bool>("IsConsumableByCount")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsConsumableByTime")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsLimitedEdition")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("IsStackable")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
                     b.Property<bool>("IsTradable")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("character varying(2048)");
 
                     b.Property<int>("MaxStack")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(99);
+
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Rarity")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Revision")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("UsageCount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
                     b.Property<int?>("UsagePeriodSeconds")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
 
-                    b.HasIndex("CatalogUuid")
+                    b.HasIndex("IsCurrentVersion");
+
+                    b.HasIndex("PrefixId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Uuid")
                         .IsUnique()
                         .HasDatabaseName("UQ_Consumable_CurrentVersion")
                         .HasFilter("\"IsCurrentVersion\" = TRUE");
 
-                    b.HasIndex("IsCurrentVersion");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("CatalogUuid", "Revision")
+                    b.HasIndex("Uuid", "Revision")
                         .IsUnique()
                         .HasDatabaseName("UQ_Consumable_Catalog_Revision");
 
@@ -537,24 +491,22 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("DagType")
                         .IsRequired()
                         .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -569,18 +521,16 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ChildId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("DagId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ParentId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -598,20 +548,18 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("DagId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsEnabled")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
                     b.Property<int>("NodeId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -627,14 +575,12 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("NodeType")
                         .IsRequired()
                         .HasMaxLength(13)
-                        .HasColumnType("character varying(13)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -648,30 +594,25 @@ namespace rest.Migrations.AdminDb
             modelBuilder.Entity("MyApi.Models.DropItem", b =>
                 {
                     b.Property<int>("DropTableId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CatalogCategory")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Id")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsGuaranteed")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxQuantity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MinQuantity")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Rarity")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Weight")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("DropTableId", "CatalogUuid");
 
@@ -689,20 +630,21 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("CustomData")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("KeyCode")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -716,20 +658,16 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Data")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("jsonb")
-                        .HasDefaultValueSql("'{}'::jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -738,155 +676,160 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Enemy", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("DropTableId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("CatalogId");
+                    b.HasKey("Uuid");
 
                     b.HasIndex("DropTableId");
+
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("Enemies");
                 });
 
             modelBuilder.Entity("MyApi.Models.EquipmentItem", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("InitialLimitedEditionCount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsLimitedEdition")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
                     b.Property<bool>("IsStackable")
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
                     b.Property<bool>("IsTradable")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("ItemImageUrl")
-                        .HasMaxLength(2048)
-                        .HasColumnType("character varying(2048)");
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Rarity")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Revision")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
 
-                    b.HasIndex("CatalogUuid")
+                    b.HasIndex("IsCurrentVersion");
+
+                    b.HasIndex("PrefixId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Uuid")
                         .IsUnique()
                         .HasDatabaseName("UQ_Equipment_CurrentVersion")
                         .HasFilter("\"IsCurrentVersion\" = TRUE");
 
-                    b.HasIndex("IsCurrentVersion");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("CatalogUuid", "Revision")
+                    b.HasIndex("Uuid", "Revision")
                         .IsUnique()
                         .HasDatabaseName("UQ_Equipment_Catalog_Revision");
 
@@ -897,21 +840,19 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Logic")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("MaxLevel")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(99);
 
                     b.Property<int>("MinLevel")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
                     b.HasKey("Id");
@@ -921,73 +862,76 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Lottery", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ExpiredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("PityNumber")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("PityType")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SingleCostAmount")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SingleCostCurrencyId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("StartAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("TenCostAmount")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("TenCostCurrencyId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("PrefixId");
 
                     b.HasIndex("SingleCostCurrencyId");
 
@@ -998,192 +942,205 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.LotteryPrize", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsPickup")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LotteryId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<int>("PrizeCatalogId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("LotteryUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("PrizeCatalogId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PrizeCategory")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Rarity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Weight")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
 
-                    b.HasIndex("LotteryId");
+                    b.HasIndex("LotteryUuid");
 
-                    b.HasIndex("PrizeCatalogId");
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("LotteryPrizes");
                 });
 
             modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("LotteryId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("LotteryUuid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Rarity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Weight")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
 
-                    b.HasIndex("LotteryId");
+                    b.HasIndex("LotteryUuid");
+
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("LotteryRarities");
                 });
 
             modelBuilder.Entity("MyApi.Models.Material", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("InitialLimitedEditionCount")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsLimitedEdition")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsStackable")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsTradable")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxQuantity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("Materials");
                 });
@@ -1192,20 +1149,16 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Criteria")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("jsonb")
-                        .HasDefaultValueSql("'{}'::jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("TrackingMode")
                         .IsRequired()
                         .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1214,60 +1167,63 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Player", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ExpTableId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Rarity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("CatalogId");
+                    b.HasKey("Uuid");
 
                     b.HasIndex("ExpTableId");
+
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("Players");
                 });
@@ -1276,14 +1232,12 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ExpiredAt")
                         .HasColumnType("timestamptz");
@@ -1291,7 +1245,7 @@ namespace rest.Migrations.AdminDb
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("StartAt")
                         .HasColumnType("timestamptz");
@@ -1299,7 +1253,7 @@ namespace rest.Migrations.AdminDb
                     b.Property<string>("reward_type")
                         .IsRequired()
                         .HasMaxLength(21)
-                        .HasColumnType("character varying(21)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1310,31 +1264,64 @@ namespace rest.Migrations.AdminDb
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("MyApi.Models.ServerVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Major")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Minor")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Patch")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("ReleasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ServerVersions");
+                });
+
             modelBuilder.Entity("MyApi.Models.Shop", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("DefaultCurrencyCode")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ExpiredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PlayFabStoreId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("StartAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1345,25 +1332,23 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsRecommended")
-                        .HasColumnType("boolean");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PlayFabItemId")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("ShopId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -1376,22 +1361,20 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1400,65 +1383,68 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Title", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Uuid")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CatalogId")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("CatalogUuid")
-                        .HasColumnType("uuid");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CustomData")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ExpiredAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.Property<string>("IconUrl")
-                        .HasColumnType("text");
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsCurrentVersion")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("ItemImageUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("NumberInPrefix")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PrefixId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Requirement")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Revision")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("StartAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("text");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("Uuid");
 
-                    b.HasIndex("CatalogId");
+                    b.HasIndex("IconAssetId");
+
+                    b.HasIndex("PrefixId");
 
                     b.ToTable("Titles");
                 });
@@ -1467,24 +1453,22 @@ namespace rest.Migrations.AdminDb
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("AppVersionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("AssetVersionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("TEXT")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
@@ -1498,40 +1482,100 @@ namespace rest.Migrations.AdminDb
                     b.ToTable("update_versions", (string)null);
                 });
 
+            modelBuilder.Entity("MyApi.Models.VipMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CustomData")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("custom_data");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("IconAssetId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("icon_asset_id");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<decimal>("PointMultiplier")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("point_multiplier");
+
+                    b.Property<long>("RequiredPoint")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("required_point");
+
+                    b.Property<string>("Requirement")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("requirement");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IconAssetId")
+                        .HasDatabaseName("ix_vip_masters_icon_asset_id");
+
+                    b.HasIndex("Level")
+                        .IsUnique()
+                        .HasDatabaseName("ix_vip_masters_level");
+
+                    b.HasIndex("SortOrder")
+                        .HasDatabaseName("ix_vip_masters_sort_order");
+
+                    b.ToTable("vip_masters", (string)null);
+                });
+
             modelBuilder.Entity("MyApi.Models.VirtualCurrency", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("CurrencyType")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxCapacity")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.Property<int>("MaxQuantity")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(2000000000);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("RechargeRate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.HasKey("Id");
@@ -1542,13 +1586,116 @@ namespace rest.Migrations.AdminDb
                     b.ToTable("virtual_currencies", (string)null);
                 });
 
+            modelBuilder.Entity("MyApi.Models.WorldPhaseMaster", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("BannerAssetId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("banner_asset_id");
+
+                    b.Property<string>("CustomData")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("custom_data");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
+                    b.Property<DateTimeOffset?>("ForceProgressAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("force_progress_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Phase")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("phase");
+
+                    b.Property<string>("Requirement")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("requirement");
+
+                    b.Property<DateTimeOffset?>("UnlockAfter")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("unlock_after");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BannerAssetId");
+
+                    b.HasIndex("ForceProgressAt")
+                        .HasDatabaseName("ix_world_phase_masters_force_progress_at");
+
+                    b.HasIndex("Phase")
+                        .IsUnique()
+                        .HasDatabaseName("ix_world_phase_masters_phase");
+
+                    b.HasIndex("UnlockAfter")
+                        .HasDatabaseName("ix_world_phase_masters_unlock_after");
+
+                    b.ToTable("world_phase_masters", (string)null);
+                });
+
+            modelBuilder.Entity("MyApi.Models.WorldProgressState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ActivePlayerCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("active_player_count");
+
+                    b.Property<decimal>("AvgPlayerLevel")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("avg_player_level");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("CurrentPhase")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("current_phase");
+
+                    b.Property<DateTimeOffset>("LastAggregatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("last_aggregated_at");
+
+                    b.Property<DateTimeOffset>("PhaseStartedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phase_started_at");
+
+                    b.Property<long>("TotalBossKillCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("total_boss_kill_count");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("world_progress_state", (string)null);
+                });
+
             modelBuilder.Entity("MyApi.Models.SkillTree", b =>
                 {
                     b.HasBaseType("MyApi.Models.Dag");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
 
                     b.HasDiscriminator().HasValue("SkillTree");
@@ -1560,11 +1707,11 @@ namespace rest.Migrations.AdminDb
 
                     b.Property<int>("Cost")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("INTEGER")
                         .HasDefaultValue(0);
 
                     b.Property<int>("SkillId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasIndex("SkillId");
 
@@ -1576,10 +1723,10 @@ namespace rest.Migrations.AdminDb
                     b.HasBaseType("MyApi.Models.RewardDefinition");
 
                     b.Property<int?>("EligibilityConditionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ObjectiveCriteriaId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasIndex("EligibilityConditionId")
                         .IsUnique();
@@ -1604,10 +1751,10 @@ namespace rest.Migrations.AdminDb
                     b.HasBaseType("MyApi.Models.RewardDefinition");
 
                     b.Property<int?>("EligibilityConditionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ObjectiveCriteriaId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasIndex("EligibilityConditionId")
                         .IsUnique();
@@ -1624,15 +1771,34 @@ namespace rest.Migrations.AdminDb
                     b.HasDiscriminator().HasValue("DailyMission");
                 });
 
+            modelBuilder.Entity("MyApi.Models.DistributedItems", b =>
+                {
+                    b.HasBaseType("MyApi.Models.RewardDefinition");
+
+                    b.Property<int?>("EligibilityConditionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasIndex("EligibilityConditionId")
+                        .IsUnique();
+
+                    b.ToTable("reward_definitions", t =>
+                        {
+                            t.Property("EligibilityConditionId")
+                                .HasColumnName("DistributedItems_EligibilityConditionId");
+                        });
+
+                    b.HasDiscriminator().HasValue("DistributedItems");
+                });
+
             modelBuilder.Entity("MyApi.Models.LoginBonus", b =>
                 {
                     b.HasBaseType("MyApi.Models.RewardDefinition");
 
                     b.Property<int?>("EligibilityConditionId")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("RequiredConsecutiveDays")
-                        .HasColumnType("integer");
+                        .HasColumnType("INTEGER");
 
                     b.HasIndex("EligibilityConditionId")
                         .IsUnique();
@@ -1670,51 +1836,28 @@ namespace rest.Migrations.AdminDb
                         .HasForeignKey("AchievementTierId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
-                        .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("MyApi.Models.RewardDefinition", null)
                         .WithMany("BundledItems")
                         .HasForeignKey("RewardDefinitionId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Catalog");
-                });
-
-            modelBuilder.Entity("MyApi.Models.Catalog", b =>
-                {
-                    b.HasOne("MyApi.Models.CatalogSeries", "Series")
-                        .WithMany()
-                        .HasForeignKey("SeriesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Series");
-                });
-
-            modelBuilder.Entity("MyApi.Models.CatalogSeries", b =>
-                {
-                    b.HasOne("MyApi.Models.CatalogCategory", "Category")
-                        .WithMany("Series")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("MyApi.Models.ConsumableItem", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
+                        .HasForeignKey("IconAssetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.DagEdge", b =>
@@ -1764,59 +1907,67 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.DropItem", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
-                        .WithMany()
-                        .HasForeignKey("CatalogUuid")
-                        .HasPrincipalKey("Uuid")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("MyApi.Models.DropTable", "DropTable")
                         .WithMany("DropItems")
                         .HasForeignKey("DropTableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
-
                     b.Navigation("DropTable");
                 });
 
             modelBuilder.Entity("MyApi.Models.Enemy", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
-                        .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MyApi.Models.DropTable", "DropTable")
                         .WithMany()
                         .HasForeignKey("DropTableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
+                        .WithMany()
+                        .HasForeignKey("IconAssetId");
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("DropTable");
+
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.EquipmentItem", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
+                        .HasForeignKey("IconAssetId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.Lottery", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
+                        .HasForeignKey("IconAssetId");
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1832,7 +1983,9 @@ namespace rest.Migrations.AdminDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
 
                     b.Navigation("SingleCostCurrency");
 
@@ -1841,78 +1994,94 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.LotteryPrize", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("IconAssetId");
 
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
                         .WithMany("Prizes")
-                        .HasForeignKey("LotteryId")
+                        .HasForeignKey("LotteryUuid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MyApi.Models.Catalog", "PrizeCatalog")
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
                         .WithMany()
-                        .HasForeignKey("PrizeCatalogId")
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
 
                     b.Navigation("Lottery");
 
-                    b.Navigation("PrizeCatalog");
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.LotteryRarity", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("IconAssetId");
 
                     b.HasOne("MyApi.Models.Lottery", "Lottery")
                         .WithMany("Rarities")
-                        .HasForeignKey("LotteryId")
+                        .HasForeignKey("LotteryUuid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("IconAsset");
 
                     b.Navigation("Lottery");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.Material", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
+                        .HasForeignKey("IconAssetId");
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.Player", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
-                        .WithMany()
-                        .HasForeignKey("CatalogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MyApi.Models.ExpTable", "ExpTable")
                         .WithMany("Players")
                         .HasForeignKey("ExpTableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
+                        .WithMany()
+                        .HasForeignKey("IconAssetId");
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ExpTable");
+
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.ShopItem", b =>
@@ -1924,13 +2093,19 @@ namespace rest.Migrations.AdminDb
 
             modelBuilder.Entity("MyApi.Models.Title", b =>
                 {
-                    b.HasOne("MyApi.Models.Catalog", "Catalog")
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
                         .WithMany()
-                        .HasForeignKey("CatalogId")
+                        .HasForeignKey("IconAssetId");
+
+                    b.HasOne("MyApi.Models.CatalogPrefix", "Prefix")
+                        .WithMany()
+                        .HasForeignKey("PrefixId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Catalog");
+                    b.Navigation("IconAsset");
+
+                    b.Navigation("Prefix");
                 });
 
             modelBuilder.Entity("MyApi.Models.UpdateVersion", b =>
@@ -1950,6 +2125,26 @@ namespace rest.Migrations.AdminDb
                     b.Navigation("App");
 
                     b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("MyApi.Models.VipMaster", b =>
+                {
+                    b.HasOne("MyApi.Models.AddressableAsset", "IconAsset")
+                        .WithMany()
+                        .HasForeignKey("IconAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("IconAsset");
+                });
+
+            modelBuilder.Entity("MyApi.Models.WorldPhaseMaster", b =>
+                {
+                    b.HasOne("MyApi.Models.AddressableAsset", "BannerAsset")
+                        .WithMany()
+                        .HasForeignKey("BannerAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BannerAsset");
                 });
 
             modelBuilder.Entity("MyApi.Models.SkillNode", b =>
@@ -1999,6 +2194,16 @@ namespace rest.Migrations.AdminDb
                     b.Navigation("Objective");
                 });
 
+            modelBuilder.Entity("MyApi.Models.DistributedItems", b =>
+                {
+                    b.HasOne("MyApi.Models.EligibilityCondition", "EligibilityCondition")
+                        .WithOne()
+                        .HasForeignKey("MyApi.Models.DistributedItems", "EligibilityConditionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("EligibilityCondition");
+                });
+
             modelBuilder.Entity("MyApi.Models.LoginBonus", b =>
                 {
                     b.HasOne("MyApi.Models.EligibilityCondition", "EligibilityCondition")
@@ -2012,11 +2217,6 @@ namespace rest.Migrations.AdminDb
             modelBuilder.Entity("MyApi.Models.AchievementTier", b =>
                 {
                     b.Navigation("BundledItems");
-                });
-
-            modelBuilder.Entity("MyApi.Models.CatalogCategory", b =>
-                {
-                    b.Navigation("Series");
                 });
 
             modelBuilder.Entity("MyApi.Models.Dag", b =>

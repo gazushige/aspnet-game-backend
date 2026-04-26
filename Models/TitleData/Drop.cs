@@ -7,7 +7,7 @@ namespace MyApi.Models
     /// <summary>
     /// ドロップテーブル本体（PlayFabのRandomResultTableに相当）
     /// </summary>
-    public class DropTable : IEntity, IHasCustomData
+    public class DropTable : ICacheableEntity, IHasCustomData
     {
         public int Id { get; set; }
         public string KeyCode { get; set; } = string.Empty; // PlayFab側のTableId
@@ -23,7 +23,7 @@ namespace MyApi.Models
     /// <summary>
     /// 中間クラス（Throughクラス）: ドロップテーブルとアイテムの紐付け
     /// </summary>
-    public class DropItem : IEntity
+    public class DropItem : ICacheableEntity
     {
         public int Id { get; set; }
         public int DropTableId { get; set; }
